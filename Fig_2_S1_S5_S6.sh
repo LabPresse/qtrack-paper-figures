@@ -4,14 +4,14 @@ set -euo pipefail
 #-------------------- Simulation --------------------#
 echo "Simulating data for Fig 2, S1, S5, and S6..."
 ### Simulate data for Fig 2
-# julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_2_D0.1.toml
-# julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_2_D1.0.toml
-# julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_2_D10.0.toml
+julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_2_D0.1.toml
+julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_2_D1.0.toml
+julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_2_D10.0.toml
 
 ### Simulate data for Fig S1 and S5
-# julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_S1_S5_D0.1.toml
-# julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_S1_S5_D1.0.toml
-# julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_S1_S5_D10.0.toml
+julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_S1_S5_D0.1.toml
+julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_S1_S5_D1.0.toml
+julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S5_S6/tomls/sim_params_Fig_S1_S5_D10.0.toml
 
 #-------------------- Inference & Plotting --------------------#
 echo "Fig S6 (experimental data) inference and plotting..."

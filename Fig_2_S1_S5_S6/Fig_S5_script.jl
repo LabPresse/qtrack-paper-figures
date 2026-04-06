@@ -35,7 +35,7 @@ axes_list = []
 
 D_true_vals = [10.0, 1.0, 0.1]
 for (di, D_true) in enumerate(D_true_vals)
-    dir = joinpath(INF_DIR, "inf_Fig_S1_S5_D$D_true")
+    dir = joinpath(INF_ROOT, "inf_Fig_S1_S5_D$D_true")
 
     ############# Get inferred D samples ###############
     n_samples = length(collect(burnin:indep_interval:size_limit))
