@@ -2,7 +2,7 @@ using SP2T
 using Random
 using JLD2
 
-dir = "./benchmarks/weaklim"
+dir = "./Fig_5/weaklim"
 
 Random.seed!(9)
 FloatType = Float64

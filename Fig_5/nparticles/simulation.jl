@@ -2,7 +2,7 @@ using SP2T
 using Random
 using JLD2
 
-dir = "./benchmarks/nparticles"
+dir = "./Fig_5/nparticles"
 
 Random.seed!(9)
 FloatType = Float64
