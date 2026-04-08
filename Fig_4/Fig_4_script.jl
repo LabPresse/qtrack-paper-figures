@@ -2,7 +2,7 @@ using SP2T
 using CairoMakie
 using JLD2
 
-dir = joinpath(pwd(), "brightness") #CHANGED
+dir = joinpath(pwd(), "Fig_4")
 
 metadata = load(joinpath(dir, "metadata.jld2"), "metadata")
 
@@ -93,4 +93,4 @@ end
 colgap!(fig.layout, 0)
 rowgap!(fig.layout, 0)
 rowsize!(fig.layout, 2, 12)
-save(joinpath(dir, "fig3.pdf"), fig)
+save(joinpath(dir, "fig4.pdf"), fig)
