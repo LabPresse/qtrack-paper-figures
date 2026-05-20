@@ -6,7 +6,8 @@ camera_params_path = "./exp_camera_params.toml"
 
 # Inference parameters
 [inference]
-n_iters = 1024000
+# n_iters = 1024000
+n_iters = 1000
 size_limit = 1001
 parametric = true # if true, number of tracks will remain the same as initial guess
 max_n_tracks = 5 # unused if parametric = true

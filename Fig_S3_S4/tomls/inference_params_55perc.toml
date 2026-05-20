@@ -6,7 +6,8 @@ camera_params_path = "../simulations/sim_Fig_S3_S4_photoblink_55perc_on/sim_para
 
 # Inference parameters
 [inference]
-n_iters = 1024000
+# n_iters = 1024000
+n_iters = 1000
 size_limit = 1001
 parametric = true
 max_n_tracks = 1

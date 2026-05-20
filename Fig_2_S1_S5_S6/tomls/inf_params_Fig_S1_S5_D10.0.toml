@@ -6,7 +6,8 @@ camera_params_path = "../simulations/sim_Fig_S1_S5_D10.0/sim_params_Fig_S1_S5_D1
 
 # Inference parameters
 [inference]
-n_iters = 1024000
+# n_iters = 1024000
+n_iters = 1000
 size_limit = 1001
 parametric = true # if true, number of tracks will remain the same as initial guess
 max_n_tracks = 5 # unused if parametric = true
