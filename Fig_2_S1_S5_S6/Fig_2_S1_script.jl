@@ -2,11 +2,12 @@ using Statistics
 using StatsBase
 using JLD2
 using SP2T
-using SP2TExtra
+# using SP2TExtra
 using CairoMakie
 using ColorSchemes
 using GeometryBasics
 using TOML
+include("../utils.jl")
 
 # =========================
 # User-configurable settings
@@ -65,6 +66,7 @@ pre_eq12(d, N, x)      = @. sqrt(2 / (d * (N - 1))) * sqrt(1 + 2 * sqrt(1 + 2x))
 pre_eq13(σ, D, Δt, R)  = @. σ^2 / (D * Δt) - 2 * R # approx dynamic localization error
 pre_eq14(s₀, Q, tₑ)    = @. s₀ / sqrt(Q * tₑ) # static localization error (in absence of 
 # pixelation, background, detector noise, and amplifier excess noise)
+
 
 """
 Load all inference chain files from a directory and return (batchsize, chain) pairs.

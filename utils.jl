@@ -1,5 +1,7 @@
 using CairoMakie
 using Dates
+using StatsBase
+# several of these functions are copied from the SP2TExtra repository]
 
 function get_unique_datadir(base_path, dir_name)
     # 1. Create the initial date-prefixed name
@@ -52,4 +54,84 @@ function simulate_blinking_trajectory(total_time, on_rate, off_rate, seed_val, d
     end
     
     return state_trace, t_vals
+end
+
+function sumbin!(binned::AbstractArray{T,3}, tobin::AbstractArray{T,3}, batchsize::Integer) where {T<:Real}
+    @views for i in axes(binned, 3)
+        sum!(
+            binned[:, :, i],
+            tobin[:, :, (i-1)*batchsize+1:i*batchsize],
+        )
+    end
+    return binned
+end
+
+function binframes(frames1bit::AbstractArray{<:Integer,3}, batchsize::Integer)
+    binned = similar(
+        frames1bit,
+        size(frames1bit, 1),
+        size(frames1bit, 2),
+        size(frames1bit, 3) ÷ batchsize,
+    )
+    sumbin!(binned, frames1bit, batchsize)
+    return binned
+end
+
+function meanbin!(binned::AbstractArray{T,3}, tobin::AbstractArray{T,3}, batchsize::Integer) where {T<:AbstractFloat}
+    @views for i in axes(binned, 1)
+        mean!(
+            binned[i:i, :, :],
+            tobin[(i-1)*batchsize+1:i*batchsize, :, :],
+            weights(ones(T, batchsize)),
+            dims=1,
+        )
+    end
+    return binned
+end
+
+function bintracks(tracks1bit::AbstractArray{<:AbstractFloat,3}, batchsize::Integer)
+    binned = similar(
+        tracks1bit,
+        size(tracks1bit, 1) ÷ batchsize,
+        size(tracks1bit, 2),
+        size(tracks1bit, 3),
+    )
+    meanbin!(binned, tracks1bit, batchsize)
+    return binned
+end
+
+repeattracks(tracks::AbstractArray{<:Real,3}, batchsize::Integer) = repeat(tracks, inner=(batchsize, 1, 1))
+
+function writetiff(path::String, frames::AbstractArray{UInt16,3}; px_size::Real=1, unit::AbstractString="μm", period::Real=1)
+    tiff = TiffImages.DenseTaggedImage(reinterpret(Gray{N0f16}, frames))
+    ifdvec = ifds(tiff)
+    nframes = size(frames, 3)
+    for ifd in ifdvec
+        res = Rational{UInt32}(round(1 / px_size, digits=3))
+        ifd[TiffImages.XRESOLUTION] = res
+        ifd[TiffImages.YRESOLUTION] = res
+        ifd[TiffImages.RESOLUTIONUNIT] = oneunit(UInt8)
+    end
+    unit == "μm" && (unit = "um")
+    ifdvec[1][TiffImages.IMAGEDESCRIPTION] = "unit=$unit\nfinterval=$period"
+    TiffImages.save(path, tiff)
+end
+
+function tracks(chain::Chain{T}; burn_in::Integer=0) where {T<:Real}
+    N = sum(chain.emittercounts[burn_in+1:end])
+    t = chain.samples[1].tracks
+    x = Array{T}(undef, size(t, 1), size(t, 2), N)
+    i = 1
+    for s in chain.samples[burn_in+1:end]
+        n = size(s.tracks, 3)
+        copyto!(view(x, :, :, i:i+n-1), s.tracks)
+        i += n
+    end
+    return x
+end
+
+#! Only works when one particle is present
+function localization_error(chain::Chain{T}; burn_in::Integer=0) where {T<:Real}
+    x = tracks(chain; burn_in=burn_in)
+    mean(sqrt.(sum(var(x, dims=3), dims=2))) / 2
 end

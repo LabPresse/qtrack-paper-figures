@@ -225,4 +225,4 @@ for (label, layout) in
     )
 end
 
-save(joinpath(dir, "fig4.pdf"), fig)
+save(joinpath(dir, "fig5.pdf"), fig)

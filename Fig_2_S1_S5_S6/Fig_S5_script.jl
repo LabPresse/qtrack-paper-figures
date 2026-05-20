@@ -5,7 +5,7 @@ using Statistics
 using LinearAlgebra
 using TOML
 using ColorSchemes
-include("../../utils.jl")
+include("../utils.jl")
 
 function calculate_msd(track)
     distances = diff(track, dims=1)

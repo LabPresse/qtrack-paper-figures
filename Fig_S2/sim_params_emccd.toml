@@ -19,7 +19,7 @@ detector_type = "emccd" # "spad" or "emccd"
 random_seed = 17  # false to disable seeding
 init_width = 10 # pix, width of uniform distribution for initial track positions
 throw_out_of_bounds = false # whether to throw error if tracks are out of bounds after shifting to initial positions. If false, tracks will be shifted back into bounds.
-
+shift=true
 
 # Execution parameters
 [saving]

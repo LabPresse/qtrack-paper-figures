@@ -1,6 +1,5 @@
 using JLD2
 using SP2T
-using SP2TExtra
 using TOML
 using CairoMakie
 using Random

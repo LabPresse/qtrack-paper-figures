@@ -1,6 +1,5 @@
 using JLD2
 using SP2T
-using SP2TExtra
 using TOML
 using CairoMakie
 using Random
@@ -19,7 +18,7 @@ end
 burn_in = 100
 
 dir_no_blink = joinpath(base_dir, "inference_results/inf_Fig_S3_S4_no_photoblink")
-sim_toml = TOML.parsefile(joinpath(dir_no_blink, "sim_params.toml"))
+sim_toml = TOML.parsefile(joinpath(dir_no_blink, "sim_params_no_blink.toml"))
 diff_lim_488 = 1.22*sim_toml["camera"]["wavelength"]/(2*sim_toml["camera"]["numerical_aperture"])
 inf_toml = TOML.parsefile(joinpath(dir_no_blink, "inference_params_no_blink.toml"))
 groundtruth = load(joinpath(dir_no_blink, "groundtruth.jld2"), "tracks")
@@ -31,7 +30,7 @@ map_tracks_no_blink = map_sample.tracks
 
 # 45 percent on
 dir_45perc = joinpath(base_dir, "inference_results/inf_Fig_S3_S4_photoblink_45perc_on")
-sim_toml_blink = TOML.parsefile(joinpath(dir_45perc, "sim_params.toml"))
+sim_toml_blink = TOML.parsefile(joinpath(dir_45perc, "sim_params_blink_45perc.toml"))
 inf_toml_blink = TOML.parsefile(joinpath(dir_45perc, "inference_params_45perc.toml"))
 frames_45perc = load(joinpath(toml_dir, inf_toml_blink["frames_path"]), "frames")
 on_time = Integer(sim_toml_blink["blinking"]["off_rate_period"]*1000) # ms, I named things wrong but calculated it right.
