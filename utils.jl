@@ -117,7 +117,7 @@ function writetiff(path::String, frames::AbstractArray{UInt16,3}; px_size::Real=
     TiffImages.save(path, tiff)
 end
 
-function tracks(chain::Chain{T}; burn_in::Integer=0) where {T<:Real}
+function tracks_from_chain(chain::Chain{T}; burn_in::Integer=0) where {T<:Real}
     N = sum(chain.emittercounts[burn_in+1:end])
     t = chain.samples[1].tracks
     x = Array{T}(undef, size(t, 1), size(t, 2), N)
@@ -132,6 +132,6 @@ end
 
 #! Only works when one particle is present
 function localization_error(chain::Chain{T}; burn_in::Integer=0) where {T<:Real}
-    x = tracks(chain; burn_in=burn_in)
+    x = tracks_from_chain(chain; burn_in=burn_in)
     mean(sqrt.(sum(var(x, dims=3), dims=2))) / 2
 end

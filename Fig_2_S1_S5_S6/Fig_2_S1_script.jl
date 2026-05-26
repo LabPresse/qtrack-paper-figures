@@ -35,6 +35,18 @@ const FIGURE_OPTIONS = Dict(
         output_name = "Fig_S1.pdf",
         bounds_ab = (4.5, 8.5, 14, 18) #pixels
     ),
+    "Fig_2_new" => (
+        sim_prefix = "sim_Fig_2_new_D",
+        inf_prefix = "inf_Fig_2_new_D",
+        output_name = "Fig_2_new.pdf",
+        bounds_ab = (5, 9, 14, 18) #pixels
+    ),
+    "Fig_2_newest" => (
+        sim_prefix = "sim_Fig_2_newest_D",
+        inf_prefix = "inf_Fig_2_newest_D",
+        output_name = "Fig_2_newest.pdf",
+        bounds_ab = (5, 9, 14, 18) #pixels
+    ),
 )
 
 figure_name = length(ARGS) >= 1 ? ARGS[1] : "Fig_2"
@@ -153,7 +165,7 @@ end
 function load_tracks_for_panel(inf_dir::AbstractString, sim_dir::AbstractString, batchsize::Int; burn_in::Int)
     chain = maybe_load_chain(inf_dir, batchsize)
     if chain !== nothing
-        track_samples = tracks(chain, burn_in = burn_in)
+        track_samples = tracks_from_chain(chain, burn_in = burn_in)
         return mean(track_samples, dims = 3), true
     end
 
@@ -183,7 +195,7 @@ function maybe_scatter_simulation_results!(ax_loc, ax_diff, Dsim, metadata, colo
             localization_errors .+= sqrt.(vec(sum((chain.samples[k].tracks .- chain.samples[1].tracks).^2, dims = 2)))
         end
         localization_errors ./= length(chain) - burn_in
-
+        println("\tBatchsize=$batchsize, loc err = $( mean(localization_errors) * 2)")
         scatter!(ax_loc, batchsize * metadata["period"], mean(localization_errors) * 2, markersize = 10, color = color)
         scatter!(ax_diff, batchsize * metadata["period"], quantiles[2] - quantiles[1], markersize = 10, color = color)
     end
@@ -324,7 +336,7 @@ legend_group = Legend(
 )
 fig[0, 3:4] = legend_group
 
-# Panel labels (a–h) — updated indices after inserting new row
+# Panel labels (a–h) 
 for (label, layout) in zip(
     ["a", "b", "c", "d", "e", "f", "g", "h"],
     [fig[1, 1], fig[1, 3], fig[2, 1], fig[2, 3], fig[3, 1], fig[3, 3], fig[4, 1], fig[4, 3]], #, fig[5, 1], fig[5, 3]],
@@ -367,23 +379,23 @@ for (c, Dsim) in zip(colors, Ds)
     lines!(ax_d, texp, 2 .* S .* Dsim, color = c)
 end
 
-# Calc again to just print for right batchsizes
-println("Batchsizes: $all_batchsizes")
-if !isempty(all_batchsizes)
-    for (c, Dsim) in zip(colors, Ds)
-        println("\nD=$Dsim")
-        texp = metadata["period"] .* all_batchsizes
+# # Calc again to just print for right batchsizes
+# println("Batchsizes: $all_batchsizes")
+# if !isempty(all_batchsizes)
+#     for (c, Dsim) in zip(colors, Ds)
+#         println("\nD=$Dsim")
+#         texp = metadata["period"] .* all_batchsizes
 
-        R  = pre_eq5(texp, texp) # motion blur coefficient
-        σ₀ = pre_eq14(psf.σ, brightness, texp) # static localization error
-        σ  = pre_eq1(σ₀, Dsim, texp, psf.σ) # dynamic localization error
+#         R  = pre_eq5(texp, texp) # motion blur coefficient
+#         σ₀ = pre_eq14(psf.σ, brightness, texp) # static localization error
+#         σ  = pre_eq1(σ₀, Dsim, texp, psf.σ) # dynamic localization error
 
-        x = pre_eq13(σ, Dsim, texp, R) # approx dynamic localization error
-        S = pre_eq12(2, 6000 ./ all_batchsizes, x) # diffusion coefficient error
-        println("CRLB Localization error: $(2 .* σ)")
-        println("CRLB diff coeff err: $(2 .* S .* Dsim)")
-    end
-end
+#         x = pre_eq13(σ, Dsim, texp, R) # approx dynamic localization error
+#         S = pre_eq12(2, 6000 ./ all_batchsizes, x) # diffusion coefficient error
+#         println("CRLB Localization error: $(2 .* σ)")
+#         println("CRLB diff coeff err: $(2 .* S .* Dsim)")
+#     end
+# end
 
 xlims!(ax_c, 8e-6, 3.8e-2)
 ylims!(ax_c, 2 * 10^-2.2, 2 * 1)
@@ -533,7 +545,7 @@ W, H, _ = size(sumframes1_exp)
 batchsize_e = choose_batchsize(EXP_ROOT, 200, fallback = :largest)
 meantracks200 = batchsize_e === nothing ? nothing : begin
     chain = maybe_load_chain(EXP_ROOT, batchsize_e)
-    chain === nothing ? nothing : mean(tracks(chain, burn_in = burn_in), dims = 3)
+    chain === nothing ? nothing : mean(tracks_from_chain(chain, burn_in = burn_in), dims = 3)
 end
 
 heatmap!(ax_e_full, (0:W) .* exp_metadata["pixel size"], (0:H) .* exp_metadata["pixel size"], view(sumframes1_exp, :, :, 1), colormap = :grays)
@@ -587,7 +599,7 @@ translate!(lines!(fig.scene, getindex.(pts2, 1), getindex.(pts2, 2), color = :gr
 # Panel f (chain1)
 meantracks1_exp = begin
     chain = maybe_load_chain(EXP_ROOT, 1)
-    chain === nothing ? nothing : mean(tracks(chain, burn_in = burn_in), dims = 3)
+    chain === nothing ? nothing : mean(tracks_from_chain(chain, burn_in = burn_in), dims = 3)
 end
 
 heatmap!(ax_f_full, (0:W) .* exp_metadata["pixel size"], (0:H) .* exp_metadata["pixel size"], view(sumframes1_exp, :, :, 1), colormap = :grays)
