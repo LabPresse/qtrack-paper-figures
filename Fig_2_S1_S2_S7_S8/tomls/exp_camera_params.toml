@@ -1,0 +1,9 @@
+[camera]
+### assuming SPAD array
+numerical_aperture = 1.49
+refractive_index = 1.52
+wavelength = 0.571
+pixel_size = 0.1 # μm
+period = 50e-6  # seconds
+darkcounts = "../experimental_data/darkcounts_crop.jld2" # scalar for same value for all pixels, or path to .jld2 file
+detector_size = 10  # pixels

@@ -50,7 +50,7 @@ tracks = Tracks{FloatType}(
         ),
     ),
     max_ntracks = 20,
-    scaling = √msd.value,
+    scaling = √msd.value, 2Z,
     logonprob = -5,
 )
 

@@ -1,9 +1,0 @@
-[camera]
-# numerical_aperture = 1.49
-# refractive_index = 1.52
-# wavelength = 0.571
-psf_std = 0.185 # 
-pixel_size = 0.1 # μm
-period = 20e-6  # seconds #there's a chance it could be 10us
-darkcounts = "./darkcounts.jld2" # scalar for same value for all pixels, or path to .jld2 file
-detector_size = 55  # pixels

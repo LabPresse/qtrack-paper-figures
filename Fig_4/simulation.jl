@@ -3,7 +3,7 @@ using SP2T
 using Random
 using JLD2
 
-dir = "./examples/brightness"
+dir = "./examples/background"
 
 Random.seed!(9)
 FloatType = Float64
@@ -46,13 +46,13 @@ tracks = simulate!(
 
 brightness = 1e4 * metadata["period"] * psf.A
 
-for factor in [0.1, 0.2, 0.5, 1, 2, 5]
+for factor in [5.0]
     SP2T.simulate_readouts!(
         detector,
         SP2T.getincident(
             tracks,
-            brightness * factor,
-            detector.darkcounts,
+            brightness,
+            detector.darkcounts .* factor,
             detector.pxbounds,
             psf,
         ),
