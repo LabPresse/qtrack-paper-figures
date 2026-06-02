@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
--------------------- Simulation --------------------#
+#-------------------- Simulation --------------------#
 echo "Simulating data for Fig 2, S1, S2, and S7..."
 ### Simulate data for Fig 2 (and S2 and S7)
 julia --project=. ./simulation_with_toml.jl ./Fig_2_S1_S2_S7_S8/tomls/sim_params_Fig_2_D0.1.toml

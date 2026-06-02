@@ -29,5 +29,5 @@ throw_out_of_bounds = true
 save_location = "../simulations/"
 save_unique = false # if true, will save results in folder "$(date)_sim_$(save_name)$(id)" with a unique
 # ID at the end if needed to avoid overwriting any results. If false, will save in directory with just "sim_$(save_name)".
-save_name = "Fig_2_newest_D0.1"
+save_name = "Fig_S2_D0.1"
  
