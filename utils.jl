@@ -135,3 +135,46 @@ function localization_error(chain::Chain{T}; burn_in::Integer=0) where {T<:Real}
     x = tracks_from_chain(chain; burn_in=burn_in)
     mean(sqrt.(sum(var(x, dims=3), dims=2))) / 2
 end
+
+function credible1D(S::AbstractVector{<:Sample}, i::Integer, xedges::AbstractRange, yedges::AbstractRange; factor::Real=1, xshift::Real=0, yshift::Real=0)
+    N = size(S[1].tracks, 1)
+    xcounts = zeros(Float64, N, length(xedges) - 1)
+    ycounts = zeros(Float64, N, length(yedges) - 1)
+    ntracks = length(S)
+    for s in S
+        @views for (n, x) in enumerate(eachslice(s.tracks, dims=1))
+            histcounts!(xcounts[n, :], (x[1, i:i] .+ xshift) .* factor, xedges)
+            histcounts!(ycounts[n, :], (x[2, i:i] .+ yshift) .* factor, yedges)
+        end
+    end
+    xcounts ./= ntracks
+    ycounts ./= ntracks
+    xcounts, ycounts
+end
+
+function histcounts!(N::AbstractArray, x::AbstractArray, xedges::AbstractRange)
+    @assert firstindex(N) === 1
+
+    # What is the size of each bin?
+    nbins = length(xedges) - 1
+    xmin, xmax = extrema(xedges)
+    δ𝑖δx = nbins / (xmax - xmin)
+
+    # Make sure we don't have a segfault by filling beyond the length of N
+    # in the @inbounds loop below
+    if length(N) < nbins
+        nbins = length(N)
+        @warn "length(N) < nbins; any bins beyond length(N) will not be filled"
+    end
+
+    # Loop through each element of x
+    @inbounds for n ∈ eachindex(x)
+        xᵢ = x[n]
+        𝑖 = (xᵢ - xmin) * δ𝑖δx
+        if 0 < 𝑖 <= nbins
+            i = ceil(Int, 𝑖)
+            N[i] += 1
+        end
+    end
+    return N
+end
