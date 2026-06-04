@@ -95,27 +95,21 @@ for (di, D_true) in enumerate(D_true_vals)
     if di!=3
         hidexdecorations!(grid=false)
     end
-    violin!(ax, xs_violin, D_inf_vals; 
-        scale, 
-        show_median=false, 
-        label = "Inferred diffusion coefficient",
-        color=colors[di],
-        # side=:right
-    )
-    # n_bins = 50
-    # bins = bin_ranges[di][1]:bin_ranges[di][2]/n_bins:bin_ranges[di][2]
-    # # vertical histogram
-    # for i in 1:length(batchsizes)
-    #     hist!(ax, 
-    #         D_inf_vals_list[i],
-    #         bins=bins,
-    #         direction=:x,
-    #         scale_to=0.7,
-    #         color=colors[di],
-    #         normalization=:pdf,
-    #         offset=i
-    #         )
-    # end
+
+    n_bins = 50
+    bins = bin_ranges[di][1]:bin_ranges[di][2]/n_bins:bin_ranges[di][2]
+    # vertical histogram
+    for i in 1:length(batchsizes)
+        hist!(ax, 
+            D_inf_vals_list[i],
+            bins=bins,
+            direction=:x,
+            scale_to=0.7,
+            color=colors[di],
+            normalization=:pdf,
+            offset=i
+            )
+    end
 
     scatter!(1:length(batchsizes), Ds_batched_gt; 
         label="Apparent diffusion coefficient", 

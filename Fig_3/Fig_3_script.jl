@@ -21,7 +21,7 @@ end
 
 function make_fig()
     ############################## SETUP AND LOAD DATA ##############################
-    chain = load(joinpath(@__DIR__, "old_or_extra", "2026-05-25_inf_beads", "chain_15.jld2"), "chain")
+    chain = load(joinpath(@__DIR__, "inf_beads", "chain_15.jld2"), "chain")
     track = chain.samples[end].tracks
     frames = load(joinpath(@__DIR__, "frames.jld2"), "frames")
 
@@ -37,15 +37,21 @@ function make_fig()
     t = 0:dt:(n_frames - 1) * dt
     frame_idxs = [1, 200, 400, 600]
     edges = range(-0.18, 0.18, length=400)
-    xshift = [2.74, 3.41, 4.61]
-    yshift = [0.53, 4.82, 3.43]
     max_photon_count = 8
     colors = [:red, :lime, :blue]
     arrow_offset = 0.35
+    xshift = 0.025
+    yshift = 0.045
 
-    crediblex1, credibley1 = @views credible1D(chain.samples[burn_in + 1:end], 1, edges, edges, factor=1, xshift=-xshift[1], yshift=-yshift[1])
-    crediblex2, credibley2 = @views credible1D(chain.samples[burn_in + 1:end], 2, edges, edges, factor=1, xshift=-xshift[2], yshift=-yshift[2])
-    crediblex3, credibley3 = @views credible1D(chain.samples[burn_in + 1:end], 3, edges, edges, factor=1, xshift=-xshift[3], yshift=-yshift[3])
+    mean_track = zeros(n_frames, 2, 3) # frames x (x,y) x particles
+    for i in burn_in:length(chain.samples)
+        mean_track .+= chain.samples[i].tracks
+    end
+    mean_track ./= (length(chain.samples) - burn_in + 1);
+
+    crediblex1, credibley1 = @views credible1D(chain.samples[burn_in + 1:end], 1, edges, edges, factor=1, xshift=-mean(mean_track[:, 1, 1]) + xshift, yshift=-mean(mean_track[:, 2, 1]) + yshift)
+    crediblex2, credibley2 = @views credible1D(chain.samples[burn_in + 1:end], 2, edges, edges, factor=1, xshift=-mean(mean_track[:, 1, 2]) + xshift, yshift=-mean(mean_track[:, 2, 2]) + yshift)
+    crediblex3, credibley3 = @views credible1D(chain.samples[burn_in + 1:end], 3, edges, edges, factor=1, xshift=-mean(mean_track[:, 1, 3]) + xshift, yshift=-mean(mean_track[:, 2, 3]) + yshift)
 
     vel_mean_x = zeros(n_frames - 1, 3)
     vel_mean_y = zeros(n_frames - 1, 3)
@@ -129,6 +135,9 @@ function make_fig()
     image!(ax_x_pos, t[1] .. t[end], edges[1] .. edges[end], img_x)
     image!(ax_y_pos, t[1] .. t[end], edges[1] .. edges[end], img_y)
 
+    hlines!(ax_x_pos, 0, color = :white, linestyle = :dash)
+    hlines!(ax_y_pos, 0, color = :white, linestyle = :dash)
+
     xlims!(ax_x_pos, t[1], t[end])
     xlims!(ax_y_pos, t[1], t[end])
     ylims!(ax_x_pos, edges[1], edges[end])
@@ -137,11 +146,23 @@ function make_fig()
     ############################### SUBPANELS D AND E: VELOCITY ESTIMATES ##############################
     ax_x_vel = Axis(fig[3, 1:2], ylabel = "Velocity (μm/s)", xlabel = "Time (s)")
     ax_y_vel = Axis(fig[3, 3:4], xlabel = "Time (s)")
+    # println("x-max velocity: ", maximum(abs.(vel_mean_x)))
+    # println("y-max velocity: ", maximum(abs.(vel_mean_y)))
 
     for j in 1:3
         lines!(ax_x_vel, t[1:end-1], vel_mean_x[:, j], color = colors[j])
         lines!(ax_y_vel, t[1:end-1], vel_mean_y[:, j], color = colors[j])
     end
+
+    # vlines!(ax_x_pos, 0.1355, color = :red, linestyle = :dash)
+    # vlines!(ax_x_pos, 0.1475, color = :red, linestyle = :dash)
+    # vlines!(ax_x_vel, 0.1355, color = :red, linestyle = :dash)
+    # vlines!(ax_x_vel, 0.1475, color = :red, linestyle = :dash)
+
+    # vlines!(ax_y_pos, 0.018, color = :red, linestyle = :dash)
+    # vlines!(ax_y_pos, 0.038, color = :red, linestyle = :dash)
+    # vlines!(ax_y_vel, 0.018, color = :red, linestyle = :dash)
+    # vlines!(ax_y_vel, 0.038, color = :red, linestyle = :dash)
 
     xlims!(ax_x_vel, t[1], t[end])
     xlims!(ax_y_vel, t[1], t[end])
