@@ -18,6 +18,9 @@ if length(ARGS) >= 2
     if ARGS[2] == "precomputed"
         inf_dir_name = "precomputed_inference_results"
         sim_dir_name = "precomputed_simulations"
+    elseif ARGS[2] == "test"
+        inf_dir_name = "test_inference_results"
+        sim_dir_name = "simulations"
     else
         inf_dir_name = "inference_results"
         sim_dir_name = "simulations"

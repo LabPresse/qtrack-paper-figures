@@ -8,6 +8,8 @@ include(joinpath(@__DIR__, "..", "utils.jl"))
 if length(ARGS) >= 1
     if ARGS[1] == "precomputed"
         inf_dir_name = "precomputed_inf_beads"
+    elseif ARGS[1] == "test"
+        inf_dir_name = "test_inference_results"
     else
         inf_dir_name = "inf_beads"
     end

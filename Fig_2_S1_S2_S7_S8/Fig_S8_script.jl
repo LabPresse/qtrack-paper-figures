@@ -12,6 +12,8 @@ orange = ColorSchemes.tab10.colors[2]
 if length(ARGS) >= 1
     if ARGS[1] == "precomputed"
         inf_dir_name = "precomputed_inference_results"
+    elseif ARGS[1] == "test"
+        inf_dir_name = "test_inference_results"
     else
         inf_dir_name = "inference_results"
     end
