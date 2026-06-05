@@ -7,6 +7,16 @@ using TOML
 using ColorSchemes
 include("../utils.jl")
 
+if length(ARGS) >= 1
+    if ARGS[1] == "precomputed"
+        inf_dir_name = "precomputed_inference_results"
+    else
+        inf_dir_name = "inference_results"
+    end
+else
+    inf_dir_name = "inference_results"
+end
+
 function calculate_msd(track)
     distances = diff(track, dims=1)
     squared_displacements = sum(distances .^ 2, dims=2) # x^2 + y^2
@@ -15,8 +25,8 @@ function calculate_msd(track)
 end
 
 const SCRIPT_DIR = @__DIR__
-const SAVE_DIR = abspath(joinpath(SCRIPT_DIR, "../figures"))
-const INF_ROOT = abspath(joinpath(SCRIPT_DIR, "inference_results"))
+const SAVE_DIR = abspath(joinpath(SCRIPT_DIR, "..", "figures"))
+const INF_ROOT = abspath(joinpath(SCRIPT_DIR, inf_dir_name))
 
 blue = ColorSchemes.tab10.colors[1]
 green = ColorSchemes.tab10.colors[3]
@@ -127,6 +137,7 @@ end
 ylims!(axes_list[3], -0.05, 0.35)
 
 
-display(fig)
+# display(fig)
 
+mkpath(SAVE_DIR)
 save(joinpath(SAVE_DIR, "Fig_S7.pdf"), fig)

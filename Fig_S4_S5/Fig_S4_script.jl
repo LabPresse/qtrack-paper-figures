@@ -6,8 +6,20 @@ using Random
 using Statistics
 using ColorSchemes
 include("../utils.jl")
-toml_dir = length(ARGS) >= 1 ? ARGS[1] : "."
-base_dir = abspath(joinpath(toml_dir, ".."))
+# toml_dir = length(ARGS) >= 1 ? ARGS[1] : "."
+# base_dir = abspath(joinpath(toml_dir, ".."))
+if length(ARGS) >= 1
+    if ARGS[1] == "precomputed"
+        sim_dir_name = "precomputed_simulations"
+    else
+        sim_dir_name = "simulations"
+    end
+else
+    sim_dir_name = "simulations"
+end
+const SCRIPT_DIR = @__DIR__
+const SIM_DIR = joinpath(SCRIPT_DIR, sim_dir_name)
+const SAVE_DIR = joinpath(SCRIPT_DIR, "..", "figures")
 
 function l2_diff(vec1, vec2)
     n_frames = size(vec1, 1)
@@ -17,12 +29,12 @@ end
 # ------- Load all simulations and results --------
 burn_in = 100
 
-dir_no_blink = joinpath(base_dir, "simulations/sim_Fig_S4_S5_no_photoblink")
+dir_no_blink = joinpath(SIM_DIR, "sim_Fig_S4_S5_no_photoblink")
 sim_toml = TOML.parsefile(joinpath(dir_no_blink, "sim_params_no_blink.toml"))
 groundtruth = load(joinpath(dir_no_blink, "groundtruth.jld2"), "tracks")
 
 # 45 percent on
-dir_45perc = joinpath(base_dir, "simulations/sim_Fig_S4_S5_photoblink_45perc_on")
+dir_45perc = joinpath(SIM_DIR, "sim_Fig_S4_S5_photoblink_45perc_on")
 sim_toml_blink = TOML.parsefile(joinpath(dir_45perc, "sim_params_blink_45perc.toml"))
 frames_45perc = load(joinpath(dir_45perc, "frames.jld2"), "frames")
 on_time = Integer(sim_toml_blink["blinking"]["off_rate_period"]*1000) # ms, I named things wrong but calculated it right.
@@ -30,13 +42,13 @@ off_time = Integer(sim_toml_blink["blinking"]["on_rate_period"]*1000) #ms
 states_45perc = load(joinpath(dir_45perc, "states.jld2"), "states")
 
 # 55 percent on
-dir_55perc = joinpath(base_dir, "simulations/sim_Fig_S4_S5_photoblink_55perc_on")
+dir_55perc = joinpath(SIM_DIR, "sim_Fig_S4_S5_photoblink_55perc_on")
 # sim_toml_55perc = TOML.parsefile(joinpath(dir_55perc, "sim_params_blink_55perc.toml"))
 frames_55perc = load(joinpath(dir_55perc, "frames.jld2"), "frames")
 states_55perc = load(joinpath(dir_55perc, "states.jld2"), "states")
 
 # 79 percent on
-dir_79perc = joinpath(base_dir, "simulations/sim_Fig_S4_S5_photoblink_79perc_on")
+dir_79perc = joinpath(SIM_DIR, "sim_Fig_S4_S5_photoblink_79perc_on")
 # sim_toml_79perc = TOML.parsefile(joinpath(dir_79perc, "sim_params_blink_79perc.toml"))
 frames_79perc = load(joinpath(dir_79perc, "frames.jld2"), "frames")
 states_79perc = load(joinpath(dir_79perc, "states.jld2"), "states")
@@ -126,6 +138,5 @@ Legend(fig[1, 2, Top()], elems, ["ON", "OFF"];
        orientation=:horizontal, framevisible=false, tellheight=false,
        patchsize=(18, 10), padding=(2, 2, 2, 2), margin = (0, 0, -25, 0))  # pulls it closer downward)
 
-save_dir = "./figures/"
-mkpath(save_dir)
-save(joinpath(save_dir, "Fig_S4.pdf"), fig)
+mkpath(SAVE_DIR)
+save(joinpath(SAVE_DIR, "Fig_S4.pdf"), fig)

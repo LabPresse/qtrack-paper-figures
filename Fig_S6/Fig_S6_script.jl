@@ -83,7 +83,7 @@ function main()
     ax = Axis(
         fig[1, 1],
         xlabel = "Batchsize",
-        ylabel = "Apparent diffusion coefficient",
+        ylabel = "Apparent diffusion coefficient (μm²/s)",
         xticks = (1:length(batchsizes), string.(batchsizes))
     )
 
@@ -104,7 +104,7 @@ function main()
     end
 
     save(joinpath(SAVE_DIR, "Fig_S6.pdf"), fig)
-    display(fig)
+    # display(fig)
 end
 
 main()

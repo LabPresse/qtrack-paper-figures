@@ -1,0 +1,28 @@
+# Optical parameters
+[camera]
+numerical_aperture = 1.45
+refractive_index = 1.52
+wavelength = 0.488
+pixel_size = 0.1 # μm
+period = 10e-6  # seconds
+darkcounts = 0.0  # scalar for same value for all pixels, or path to .jld2 file
+detector_size = 25  # pixels
+
+# Simulation parameters
+[simulation]
+n_frames = 12000
+diffusion_coefficient = 1.0  # μm²/s
+n_particles = 1 #originally ntracks
+brightness_multiplier = 1e4 #photons per second
+random_seed = 1333  # false to disable seeding
+n_simulations = 1 #number of unique trajectory simulations
+n_realizations = 1 # default 1, number of realizations of detector data for each unique trajectory simulation
+init_width = 10 # pix, width of uniform distribution for initial track positions
+throw_out_of_bounds = true
+
+# Saving parameters
+[saving]
+save_location = "../simulations/"
+save_unique = false # if true, will save results in folder "$(date)_sim_$(save_name)$(id)" with a unique
+# id at the end if needed to avoid overwriting any results. If false, will save in directory with just "sim_$(save_name)".
+save_name = "Fig_S4_S5_no_photoblink"

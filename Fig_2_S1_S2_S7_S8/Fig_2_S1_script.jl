@@ -13,13 +13,29 @@ include("../utils.jl")
 # User-configurable settings
 # =========================
 
+figure_name = length(ARGS) >= 1 ? ARGS[1] : "Fig_2"
+if length(ARGS) >= 2
+    if ARGS[2] == "precomputed"
+        inf_dir_name = "precomputed_inference_results"
+        sim_dir_name = "precomputed_simulations"
+    else
+        inf_dir_name = "inference_results"
+        sim_dir_name = "simulations"
+    end
+else
+    inf_dir_name = "inference_results"
+    sim_dir_name = "simulations"
+end
+
+
 # Base directory for this figure family
-const FIG_DIR = @__DIR__
-const BASE_DIR = abspath(joinpath(FIG_DIR, ".."))
-const SIM_ROOT = joinpath(FIG_DIR, "simulations")
-const INF_ROOT = joinpath(FIG_DIR, "inference_results")
-const EXP_ROOT = joinpath(FIG_DIR, "inference_results", "inf_exp_data")
-const EXP_DATA_ROOT = joinpath(FIG_DIR, "experimental_data")
+const SCRIPT_DIR = @__DIR__
+const BASE_DIR = abspath(joinpath(SCRIPT_DIR, ".."))
+const SIM_ROOT = joinpath(SCRIPT_DIR, sim_dir_name)
+const INF_ROOT = joinpath(SCRIPT_DIR, inf_dir_name)
+const EXP_ROOT = joinpath(SCRIPT_DIR, inf_dir_name, "inf_exp_data")
+const EXP_DATA_ROOT = joinpath(SCRIPT_DIR, "experimental_data")
+const SAVE_DIR = joinpath(SCRIPT_DIR, "..", "figures")
 
 
 const FIGURE_OPTIONS = Dict(
@@ -37,7 +53,6 @@ const FIGURE_OPTIONS = Dict(
     ),
 )
 
-figure_name = length(ARGS) >= 1 ? ARGS[1] : "Fig_2"
 haskey(FIGURE_OPTIONS, figure_name) || error(
     "Unknown figure '$figure_name'. Expected one of: $(join(sort(collect(keys(FIGURE_OPTIONS))), ", "))",
 )
@@ -614,7 +629,7 @@ translate!(lines!(fig.scene, getindex.(pts2, 1), getindex.(pts2, 2), color = :gr
 # =========================
 # Save output
 # =========================
-
-outpath = joinpath(BASE_DIR, "figures", figure_cfg.output_name)
+mkpath(SAVE_DIR)
+outpath = joinpath(SAVE_DIR, figure_cfg.output_name)
 save(outpath, fig)
 println("Saved figure to $outpath")

@@ -6,8 +6,25 @@ using Random
 using Statistics
 using ColorSchemes
 include("../utils.jl")
-toml_dir = length(ARGS) >= 1 ? ARGS[1] : "."
-base_dir = abspath(joinpath(toml_dir, ".."))
+# toml_dir = length(ARGS) >= 1 ? ARGS[1] : "."
+# base_dir = abspath(joinpath(toml_dir, ".."))
+
+const SCRIPT_DIR = @__DIR__
+if length(ARGS) >= 1
+    if ARGS[1] == "precomputed"
+        inf_dir_name = "precomputed_inference_results"
+        sim_dir_name = "precomputed_simulations"
+    else
+        inf_dir_name = "inference_results"
+        sim_dir_name = "simulations"
+    end
+else
+    inf_dir_name = "inference_results"
+    sim_dir_name = "simulations"
+end
+const INF_DIR = joinpath(SCRIPT_DIR, inf_dir_name)
+const SIM_DIR = joinpath(SCRIPT_DIR, sim_dir_name)
+const SAVE_DIR = joinpath(SCRIPT_DIR, "..", "figures")
 
 function l2_diff(vec1, vec2)
     n_frames = size(vec1, 1)
@@ -17,7 +34,7 @@ end
 # ------- Load all simulations and results --------
 burn_in = 100
 
-dir_no_blink = joinpath(base_dir, "inference_results/inf_Fig_S4_S5_no_photoblink")
+dir_no_blink = joinpath(INF_DIR, "inf_Fig_S4_S5_no_photoblink")
 sim_toml = TOML.parsefile(joinpath(dir_no_blink, "sim_params_no_blink.toml"))
 diff_lim_488 = 1.22*sim_toml["camera"]["wavelength"]/(2*sim_toml["camera"]["numerical_aperture"])
 inf_toml = TOML.parsefile(joinpath(dir_no_blink, "inference_params_no_blink.toml"))
@@ -29,10 +46,11 @@ map_sample, map_idx = chain_no_blink.samples[i+burn_in], i + burn_in
 map_tracks_no_blink = map_sample.tracks
 
 # 45 percent on
-dir_45perc = joinpath(base_dir, "inference_results/inf_Fig_S4_S5_photoblink_45perc_on")
+dir_45perc = joinpath(INF_DIR, "inf_Fig_S4_S5_photoblink_45perc_on")
 sim_toml_blink = TOML.parsefile(joinpath(dir_45perc, "sim_params_blink_45perc.toml"))
 inf_toml_blink = TOML.parsefile(joinpath(dir_45perc, "inference_params_45perc.toml"))
-frames_45perc = load(joinpath(toml_dir, inf_toml_blink["frames_path"]), "frames")
+# frames_45perc = load(joinpath(toml_dir, inf_toml_blink["frames_path"]), "frames")
+frames_45perc = load(joinpath(SIM_DIR, "sim_Fig_S4_S5_photoblink_45perc_on", "frames.jld2"), "frames")
 on_time = Integer(sim_toml_blink["blinking"]["off_rate_period"]*1000) # ms, I named things wrong but calculated it right.
 off_time = Integer(sim_toml_blink["blinking"]["on_rate_period"]*1000) #ms
 println("ON time of $on_time ms")
@@ -45,9 +63,10 @@ map_sample, map_idx = chain_45perc.samples[i+burn_in], i + burn_in
 map_tracks_45perc = map_sample.tracks;
 
 # 55 percent on
-dir_55perc = joinpath(base_dir, "inference_results/inf_Fig_S4_S5_photoblink_55perc_on")
+dir_55perc = joinpath(INF_DIR, "inf_Fig_S4_S5_photoblink_55perc_on")
 inf_toml_blink = TOML.parsefile(joinpath(dir_55perc, "inference_params_55perc.toml"))
-frames_55perc = load(joinpath(toml_dir, inf_toml_blink["frames_path"]), "frames")
+# frames_55perc = load(joinpath(toml_dir, inf_toml_blink["frames_path"]), "frames")
+frames_55perc = load(joinpath(SIM_DIR, "sim_Fig_S4_S5_photoblink_55perc_on", "frames.jld2"), "frames")
 chain_55perc = load(joinpath(dir_55perc, "chain_1.jld2"), "chain")
 states_55perc = load(joinpath(dir_55perc, "states.jld2"), "states");
 #, i = findmax(chain_55perc.loglikelihoods[burn_in+1:end])
@@ -56,9 +75,10 @@ map_sample, map_idx = chain_55perc.samples[i+burn_in], i + burn_in
 map_tracks_55perc = map_sample.tracks;
 
 # 79 percent on
-dir_79perc = joinpath(base_dir, "inference_results/inf_Fig_S4_S5_photoblink_79perc_on")
+dir_79perc = joinpath(INF_DIR, "inf_Fig_S4_S5_photoblink_79perc_on")
 inf_toml_blink = TOML.parsefile(joinpath(dir_79perc, "inference_params_79perc.toml"))
-frames_79perc = load(joinpath(toml_dir, inf_toml_blink["frames_path"]), "frames")
+# frames_79perc = load(joinpath(toml_dir, inf_toml_blink["frames_path"]), "frames")
+frames_79perc = load(joinpath(SIM_DIR, "sim_Fig_S4_S5_photoblink_79perc_on", "frames.jld2"), "frames")
 chain_79perc = load(joinpath(dir_79perc, "chain_1.jld2"), "chain")
 states_79perc = load(joinpath(dir_79perc, "states.jld2"), "states");
 ~, i = findmax(chain_79perc.logposteriors[burn_in+1:end])
@@ -188,6 +208,5 @@ for (label, layout) in zip(["a", "b", "c"], [fig_err[1, :], fig_err[2, :], fig_e
     )
 end
 
-save_dir = "./figures/"
-mkpath(save_dir)
-save(joinpath(save_dir, "Fig_S5.pdf"), fig_err)
+mkpath(SAVE_DIR)
+save(joinpath(SAVE_DIR, "Fig_S5.pdf"), fig_err)

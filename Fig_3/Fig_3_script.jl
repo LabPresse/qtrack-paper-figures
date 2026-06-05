@@ -5,6 +5,18 @@ using Statistics
 using Colors
 
 include(joinpath(@__DIR__, "..", "utils.jl"))
+if length(ARGS) >= 1
+    if ARGS[1] == "precomputed"
+        inf_dir_name = "precomputed_inf_beads"
+    else
+        inf_dir_name = "inf_beads"
+    end
+else
+    inf_dir_name = "inf_beads"
+end
+
+const SCRIPT_DIR = @__DIR__
+const INF_DIR = joinpath(SCRIPT_DIR, inf_dir_name)
 
 function rgb_confidence_image(c1, c2, c3; scale)
     img = Matrix{RGBA{Float32}}(undef, size(c1)...)
@@ -21,9 +33,9 @@ end
 
 function make_fig()
     ############################## SETUP AND LOAD DATA ##############################
-    chain = load(joinpath(@__DIR__, "inf_beads", "chain_15.jld2"), "chain")
+    chain = load(joinpath(INF_DIR, "chain_15.jld2"), "chain")
     track = chain.samples[end].tracks
-    frames = load(joinpath(@__DIR__, "frames.jld2"), "frames")
+    frames = load(joinpath(SCRIPT_DIR, "frames.jld2"), "frames")
 
     batchsize = 15
     frames15 = binframes(frames, batchsize)
@@ -190,7 +202,7 @@ end
 function main()
     fig = make_fig()
     save(joinpath(@__DIR__, "..", "figures", "Fig_3.pdf"), fig)
-    display(fig)
+    # display(fig)
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__

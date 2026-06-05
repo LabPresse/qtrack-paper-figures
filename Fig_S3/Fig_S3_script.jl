@@ -6,10 +6,23 @@ using TOML
 using Statistics
 using ColorSchemes
 include("../utils.jl")
-base_dir = length(ARGS) >= 1 ? ARGS[1] : "."
+
+if length(ARGS) >= 1
+    if ARGS[1] == "precomputed"
+        sim_dir_name = "precomputed_sim_Fig_S3_motion_blur"
+    else
+        sim_dir_name = "sim_Fig_S3_motion_blur"
+    end
+else
+    sim_dir_name = "sim_Fig_S3_motion_blur"
+end
+const SCRIPT_DIR = @__DIR__
+const SAVE_DIR = joinpath(SCRIPT_DIR, "..", "figures")
+
+# base_dir = length(ARGS) >= 1 ? ARGS[1] : "."
 
 # ---- Load metadata and simulations ----
-dir = joinpath(base_dir, "sim_Fig_S3_motion_blur")
+dir = joinpath(SCRIPT_DIR, sim_dir_name)
 
 sim_toml = TOML.parsefile(joinpath(dir, "sim_params_emccd.toml"))
 # sim_params = sim_toml["simulation"]
@@ -118,6 +131,5 @@ Legend(fig[2, 1:3], [p_mb, p_gauss], ["Motion blur PSF", "Gaussian PSF"];
 
 rowsize!(fig.layout, 2, Fixed(10))
 
-save_dir = "./figures/"
-mkpath(save_dir)
-save(joinpath(save_dir, "Fig_S3.pdf"), fig)
+mkpath(SAVE_DIR)
+save(joinpath(SAVE_DIR, "Fig_S3.pdf"), fig)

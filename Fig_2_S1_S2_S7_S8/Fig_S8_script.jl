@@ -6,11 +6,23 @@ using TOML
 using ColorSchemes
 orange = ColorSchemes.tab10.colors[2]
 
-################################# Code to plot experimental histogram######################
-toml_dir = length(ARGS) >= 1 ? ARGS[1] : "."
-base_dir = abspath(joinpath(toml_dir, ".."))
-EXP_ROOT = joinpath(base_dir, "experimental_data")
-INF_ROOT = joinpath(base_dir, "inference_results/inf_exp_data/")
+################################# Code to plot experimental histogram ######################
+# toml_dir = length(ARGS) >= 1 ? ARGS[1] : "."
+# base_dir = abspath(joinpath(toml_dir, ".."))
+if length(ARGS) >= 1
+    if ARGS[1] == "precomputed"
+        inf_dir_name = "precomputed_inference_results"
+    else
+        inf_dir_name = "inference_results"
+    end
+else
+    inf_dir_name = "inference_results"
+end
+
+const SCRIPT_DIR = @__DIR__
+const SAVE_DIR = joinpath(SCRIPT_DIR, "..", "figures")
+EXP_ROOT = joinpath(SCRIPT_DIR, "experimental_data")
+INF_ROOT = joinpath(SCRIPT_DIR, inf_dir_name, "inf_exp_data")
 period = 50e-6
 burn_in = 100
 
@@ -49,5 +61,5 @@ hist!(ax, dvals2,
 )
 # hideydecorations!(ax, grid=false)
 axislegend(ax, position=:rt)
-save_dir = "./figures"
-save(joinpath(save_dir, "Fig_S8.pdf"), fig)
+mkpath(SAVE_DIR)
+save(joinpath(SAVE_DIR, "Fig_S8.pdf"), fig)
