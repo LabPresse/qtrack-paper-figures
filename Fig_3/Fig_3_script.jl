@@ -39,6 +39,9 @@ function make_fig()
     track = chain.samples[end].tracks
     frames = load(joinpath(SCRIPT_DIR, "frames.jld2"), "frames")
 
+    spots_by_frame = xml2spots("frames15_median.xml")
+    median_frames, metadata = readtiff("frames15_median.tif")
+
     batchsize = 15
     frames15 = binframes(frames, batchsize)
 
@@ -49,7 +52,8 @@ function make_fig()
     dt = period * batchsize
     n_frames = 750
     t = 0:dt:(n_frames - 1) * dt
-    frame_idxs = [1, 200, 400, 600]
+    # frame_idxs = [1, 200, 400, 600]
+    frame_idxs = [5, 270, 365, 730] #1, 273, 34, 24, 41, 44, 750, 5, 223, 365, 583, 288, 271, 730
     edges = range(-0.18, 0.18, length=400)
     max_photon_count = 8
     colors = [:red, :lime, :blue]
@@ -92,7 +96,8 @@ function make_fig()
     scale = scale == 0 ? 1.0 : scale
 
     ############################## MAKE FIGURE ##############################
-    fig = Figure(size = (1100, 700), colgap = 0, rowgap = 0)
+    # fig = Figure(size = (1100, 700), colgap = 0, rowgap = 0)
+    fig = Figure(size = (1100, 940), colgap = 0, rowgap = 0)
 
     ############################## SUBPANEL A: HEATMAPS WITH TRACKS ##############################
     hm_axes = [Axis(fig[1, i], aspect = DataAspect()) for i in 1:4]
@@ -104,12 +109,13 @@ function make_fig()
 
     for (i, frame_idx) in enumerate(frame_idxs)
         for j in 1:3
-            scatter!(hm_axes[i],
-                     track[frame_idx, 1, j],
-                     track[frame_idx, 2, j] - arrow_offset,
-                     marker = :utriangle,
-                     markersize = 15,
-                     color = colors[j])
+            arc!(hm_axes[i], Point2f(track[frame_idx, 1, j], track[frame_idx, 2, j]), 0.185, -π, π, color = colors[j], alpha=0.6, linewidth=3)
+            # scatter!(hm_axes[i],
+            #          track[frame_idx, 1, j],
+            #          track[frame_idx, 2, j] - arrow_offset,
+            #          marker = :utriangle,
+            #          markersize = 15,
+            #          color = colors[j])
         end
     end
 
@@ -149,8 +155,8 @@ function make_fig()
     image!(ax_x_pos, t[1] .. t[end], edges[1] .. edges[end], img_x)
     image!(ax_y_pos, t[1] .. t[end], edges[1] .. edges[end], img_y)
 
-    hlines!(ax_x_pos, 0, color = :white, linestyle = :dash)
-    hlines!(ax_y_pos, 0, color = :white, linestyle = :dash)
+    # hlines!(ax_x_pos, 0, color = :white, linestyle = :dash)
+    # hlines!(ax_y_pos, 0, color = :white, linestyle = :dash)
 
     xlims!(ax_x_pos, t[1], t[end])
     xlims!(ax_y_pos, t[1], t[end])
@@ -184,13 +190,54 @@ function make_fig()
     ylims!(ax_y_vel, -22, 22)
     hideydecorations!(ax_y_vel, grid = false)
 
+    ###################################### Row 4 ################################
+    hm_axes_row4 = [Axis(fig[4, i], aspect = DataAspect()) for i in 1:4]
+    hm = nothing
+    for (i, frame_idx) in enumerate(frame_idxs)
+        hm = heatmap!(hm_axes_row4[i], x, y, median_frames[:, :, frame_idx],
+                      colormap = :grays, colorrange = (0, 2))
+    end
+
+    colors_trackmate = [[1, 2, 3], [1, 2, 3], [1, 1, 2, 2, 3], [1, 2]]
+    for (i, frame_idx) in enumerate(frame_idxs)
+        n_spots = length(spots_by_frame[frame_idx])
+        println("$n_spots at frame $frame_idx")
+        for j in 1:n_spots
+            color_idx = colors_trackmate[i][j]
+            arc!(hm_axes_row4[i], Point2f(spots_by_frame[frame_idx][j][2], spots_by_frame[frame_idx][j][1]), 
+                0.3/sqrt(2), -π, π, color=colors[color_idx], alpha=0.6, linewidth=3, linestyle=(:dot, :dense))
+        end
+        # for j in 1:3
+        #     arc!(hm_axes_row4[i], Point2f(track[frame_idx, 1, j], track[frame_idx, 2, j]), 0.185, -π, π, color = colors[j])
+        # end
+    end
+
+    lines!(hm_axes_row4[1],
+           [scalebar_start_x, scalebar_start_x + scalebar_length],
+           [scalebar_start_y, scalebar_start_y],
+           color = :white, linewidth = 4)
+    text!(hm_axes_row4[1],
+          scalebar_start_x + scalebar_length / 2,
+          scalebar_start_y + 0.08,
+          text = "1 μm",
+          align = (:center, :bottom),
+          color = :white)
+
+    for ax in hm_axes_row4
+        hidespines!(ax)
+        hidedecorations!(ax)
+    end
+
+    Colorbar(fig[4, 5], hm, label = "# of photons", ticks=[0,1,2])
 
     ###################################### ADJUST LAYOUT ################################
     rowsize!(fig.layout, 1, Fixed(220))
     rowsize!(fig.layout, 2, Fixed(150))
     rowsize!(fig.layout, 3, Fixed(150))
+    rowsize!(fig.layout, 4, Fixed(220))
 
-    for (label, layout) in zip(["a", "b", "c", "d", "e"], [fig[1, :], fig[2, 1:2], fig[2, 3:4], fig[3, 1:2], fig[3, 3:4]])
+
+    for (label, layout) in zip(["a", "b", "c", "d", "e", "f"], [fig[1, :], fig[2, 1:2], fig[2, 3:4], fig[3, 1:2], fig[3, 3:4], fig[4, :]])
         Label(layout[1, 1, TopLeft()],
               label,
               fontsize = 20,
@@ -198,7 +245,6 @@ function make_fig()
               halign = :right)
     end
 
-    return fig
 end
 
 function main()
