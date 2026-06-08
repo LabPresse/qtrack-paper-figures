@@ -7,18 +7,18 @@ using Colors
 include(joinpath(@__DIR__, "..", "utils.jl"))
 if length(ARGS) >= 1
     if ARGS[1] == "precomputed"
-        inf_dir_name = "precomputed_inf_beads"
+        inf_dir_name = "precomputed_inference_results"
     elseif ARGS[1] == "test"
         inf_dir_name = "test_inference_results"
     else
-        inf_dir_name = "inf_beads"
+        inf_dir_name = "inference_results"
     end
 else
-    inf_dir_name = "inf_beads"
+    inf_dir_name = "inference_results"
 end
 
 const SCRIPT_DIR = @__DIR__
-const INF_DIR = joinpath(SCRIPT_DIR, inf_dir_name)
+const INF_DIR = joinpath(SCRIPT_DIR, inf_dir_name, "inf_beads")
 
 function rgb_confidence_image(c1, c2, c3; scale)
     img = Matrix{RGBA{Float32}}(undef, size(c1)...)

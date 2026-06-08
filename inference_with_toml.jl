@@ -33,16 +33,22 @@ priors = inference_params_toml["priors"]
 saving_params = get(inference_params_toml, "saving", inference_params_toml)
 
 chain_output_dir = resolve_path(saving_params["chain_output_dir"], toml_dir)
+if test
+    clean = rstrip(chain_output_dir, '/')
+    parent_dir, last_dir = splitdir(clean)
+    chain_output_dir = joinpath(parent_dir, "test_$(last_dir)")
+end
 save_name = saving_params["save_name"]
 save_unique = get(saving_params, "save_unique", true)
 also_save = get(saving_params, "also_save", String[])
 batchsizes = inference_params["batchsizes"]
 
-if test
-    dir_name = "test_inf_$(save_name)"
-else
-    dir_name = "inf_$(save_name)"
-end
+# if test
+#     dir_name = "test_inf_$(save_name)"
+# else
+#     dir_name = "inf_$(save_name)"
+# end
+dir_name = "inf_$(save_name)"
 save_dir = save_unique ? get_unique_datadir(chain_output_dir, dir_name) : joinpath(chain_output_dir, dir_name)
 println("Saving in $save_dir")
 mkpath(save_dir)

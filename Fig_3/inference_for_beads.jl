@@ -15,6 +15,15 @@ toml_path = abspath(toml_file)
 toml_dir = dirname(toml_path)
 inference_params_toml = TOML.parsefile(toml_path)
 
+test = false
+println(ARGS)
+if length(ARGS) >= 2
+    if ARGS[2] == "test"
+        println("Test inference runs for 1000 iterations")
+        test = true
+    end
+end
+
 frames_path = resolve_path(inference_params_toml["frames_path"], toml_dir)
 camera_params_path = resolve_path(inference_params_toml["camera_params_path"], toml_dir)
 camera_params = TOML.parsefile(camera_params_path)["camera"]
@@ -25,6 +34,11 @@ priors = inference_params_toml["priors"]
 saving_params = get(inference_params_toml, "saving", inference_params_toml)
 
 chain_output_dir = resolve_path(saving_params["chain_output_dir"], toml_dir)
+if test
+    clean = rstrip(chain_output_dir, '/')
+    parent_dir, last_dir = splitdir(clean)
+    chain_output_dir = joinpath(parent_dir, "test_$(last_dir)")
+end
 save_name = saving_params["save_name"]
 save_unique = get(saving_params, "save_unique", true)
 also_save = get(saving_params, "also_save", String[])
@@ -96,13 +110,14 @@ for batchsize in batchsizes
         logonprob = priors["track_logonprob"],
     )
 
+    n_iters = test ? 1000 : inference_params["n_iters"]
     chain = runMCMC(
         tracks = tracks,
         msd = msd,
         brightness = brightness,
         detector = detector,
         psf = psf,
-        niters = inference_params["n_iters"],
+        niters = n_iters,
         sizelimit = inference_params["size_limit"],
         parametric = inference_params["parametric"],
     )

@@ -385,23 +385,23 @@ for (c, Dsim) in zip(colors, Ds)
     lines!(ax_d, texp, 2 .* S .* Dsim, color = c)
 end
 
-# # Calc again to just print for right batchsizes
-# println("Batchsizes: $all_batchsizes")
-# if !isempty(all_batchsizes)
-#     for (c, Dsim) in zip(colors, Ds)
-#         println("\nD=$Dsim")
-#         texp = metadata["period"] .* all_batchsizes
+# Calc again to just print for right batchsizes
+println("Batchsizes: $all_batchsizes")
+if !isempty(all_batchsizes)
+    for (c, Dsim) in zip(colors, Ds)
+        println("\nD=$Dsim")
+        texp = metadata["period"] .* all_batchsizes
 
-#         R  = pre_eq5(texp, texp) # motion blur coefficient
-#         σ₀ = pre_eq14(psf.σ, brightness, texp) # static localization error
-#         σ  = pre_eq1(σ₀, Dsim, texp, psf.σ) # dynamic localization error
+        R  = pre_eq5(texp, texp) # motion blur coefficient
+        σ₀ = pre_eq14(psf.σ, brightness, texp) # static localization error
+        σ  = pre_eq1(σ₀, Dsim, texp, psf.σ) # dynamic localization error
 
-#         x = pre_eq13(σ, Dsim, texp, R) # approx dynamic localization error
-#         S = pre_eq12(2, 6000 ./ all_batchsizes, x) # diffusion coefficient error
-#         println("CRLB Localization error: $(2 .* σ)")
-#         println("CRLB diff coeff err: $(2 .* S .* Dsim)")
-#     end
-# end
+        x = pre_eq13(σ, Dsim, texp, R) # approx dynamic localization error
+        S = pre_eq12(2, 6000 ./ all_batchsizes, x) # diffusion coefficient error
+        println("CRLB Localization error: $(2 .* σ)")
+        println("CRLB diff coeff err: $(2 .* S .* Dsim)")
+    end
+end
 
 xlims!(ax_c, 8e-6, 3.8e-2)
 ylims!(ax_c, 2 * 10^-2.2, 2 * 1)

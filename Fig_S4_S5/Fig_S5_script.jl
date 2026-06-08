@@ -186,6 +186,10 @@ for (j, state) in enumerate(states_perc)
         linewidth=2,
         label="QTrack (photoblinking)")
 
+    off_idxs = state .== 0
+    perc = mean(norm_sp2t_perc[off_idxs] .<= diff_lim_488)
+    println("Loc. err. for case $j < diffraction limit $perc of the dark periods")
+
     hlines!(ax, sim_toml["camera"]["pixel_size"],
             linestyle=:dash, color=:black, linewidth=2,
             label="Pixel width")
