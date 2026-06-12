@@ -22,7 +22,7 @@ echo "Inference for Fig S2..."
 julia --project=. ./inference_with_toml.jl ./Fig_2_S1_S2_S7_S8/tomls/inf_params_Fig_S2_D0.1.toml test
 
 echo "Inference for Fig 3 (experimental data)..."
-julia --project=. ./Fig_3/inference_for_beads.jl ./Fig_3/inf_params_exp.toml test
+julia --project=. ./Fig_3_S9/inference_for_beads.jl ./Fig_3_S9/inf_params_exp.toml test
 
 echo "Inference for Fig S5..."
 julia --project=. ./inference_with_toml.jl ./Fig_S4_S5/tomls/inference_params_no_blink.toml test
