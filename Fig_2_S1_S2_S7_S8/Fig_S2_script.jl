@@ -35,7 +35,11 @@ function main()
     cyan = ColorSchemes.tab10.colors[10]
     markersize = 20
 
-    fig = Figure(size=(800, 600))
+    inch = 96
+    pt = 4 / 3
+
+    fig = Figure(size = (12inch, 9inch), fontsize = 14pt, font = "Arial")
+    # fig = Figure(size=(800, 600))
 
     ####### Frame for Figure 2 ########
     pixel_size = 0.133
@@ -159,6 +163,15 @@ function main()
         ["Trajectory #2, 133 nm pixels"];
         legend_params...,
     )
+
+    for (label, layout) in zip(["a", "b", "c", "d"], [fig[1, 1], fig[1, 2], fig[1, 3], fig[2, 1:3]])
+        Label(layout[1, 1, TopLeft()],
+                label,
+                fontsize = 16pt,
+                font = "Arial Bold",
+                halign = :right)
+    end
+
     mkpath(SAVE_DIR)
     save(joinpath(SAVE_DIR, "Fig_S2.pdf"), fig)
     # display(fig)

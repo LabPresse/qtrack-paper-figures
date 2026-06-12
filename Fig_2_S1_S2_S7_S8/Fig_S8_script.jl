@@ -35,7 +35,12 @@ chain2 = load(joinpath(INF_ROOT, "chain_2.jld2"), "chain")
 dvals1 = chain1.msds[burn_in+1:end] ./ (2 * period) # Diffusion coefficient samples
 # MSD from SP2T is the 1D MSD, so you get D by dividing by 2*period
 dvals2 = chain2.msds[burn_in+1:end] ./ (2 * period * 2); # Diffusion coefficient samples
-fig = Figure(size=(600, 300))
+
+inch = 96
+pt = 4 / 3
+
+fig = Figure(size = (12inch, 6inch), fontsize = 18pt, font = "Arial")
+# fig = Figure(size=(600, 300))
 
 ax = Axis(fig[1,1],
         xlabel=rich("Diffusion coefficient (μm", superscript("2"), "/s)"),

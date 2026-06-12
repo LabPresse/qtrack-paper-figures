@@ -3,6 +3,8 @@ using CairoMakie
 using SP2T
 using Statistics
 using Colors
+using SP2TExtra
+# using XMLDict
 
 include(joinpath(@__DIR__, "..", "utils.jl"))
 if length(ARGS) >= 1
@@ -33,14 +35,38 @@ function rgb_confidence_image(c1, c2, c3; scale)
     return img
 end
 
+# _xmlnodes(x) = x isa AbstractVector ? x : [x]
+
+# function xml2spots(xmlfile::AbstractString)
+#     txt = read(xmlfile, String)
+#     i = findfirst(==('<'), txt)
+#     i === nothing && error("No XML content found")
+
+#     x = parse_xml(txt[i:end])
+
+#     # XMLDict uses string keys for child elements and symbol keys for attributes.
+#     sf = _xmlnodes(x["Model"]["AllSpots"]["SpotsInFrame"])
+
+#     sf = sort(sf; by = s -> parse(Int, s[:frame]))
+
+#     return [
+#         [
+#             (parse(Float64, spot[:POSITION_X]),
+#              parse(Float64, spot[:POSITION_Y]))
+#             for spot in _xmlnodes(s["Spot"])
+#         ]
+#         for s in sf
+#     ]
+# end
+
 function make_fig()
     ############################## SETUP AND LOAD DATA ##############################
     chain = load(joinpath(INF_DIR, "chain_15.jld2"), "chain")
     track = chain.samples[end].tracks
     frames = load(joinpath(SCRIPT_DIR, "frames.jld2"), "frames")
 
-    spots_by_frame = xml2spots("frames15_median.xml")
-    median_frames, metadata = readtiff("frames15_median.tif")
+    # spots_by_frame = xml2spots(joinpath(SCRIPT_DIR, "frames15_median.xml"))
+    # median_frames, metadata = readtiff(joinpath(SCRIPT_DIR, "frames15_median.tif"))
 
     batchsize = 15
     frames15 = binframes(frames, batchsize)
@@ -57,7 +83,7 @@ function make_fig()
     edges = range(-0.18, 0.18, length=400)
     max_photon_count = 8
     colors = [:red, :lime, :blue]
-    arrow_offset = 0.35
+    # arrow_offset = 0.35
     xshift = 0.025
     yshift = 0.045
 
@@ -96,8 +122,12 @@ function make_fig()
     scale = scale == 0 ? 1.0 : scale
 
     ############################## MAKE FIGURE ##############################
+    inch = 96
+    pt = 4 / 3
+
+    fig = Figure(size = (12inch, 8inch), fontsize = 14pt, font = "Arial")
     # fig = Figure(size = (1100, 700), colgap = 0, rowgap = 0)
-    fig = Figure(size = (1100, 940), colgap = 0, rowgap = 0)
+    # fig = Figure(size = (1100, 940), colgap = 0, rowgap = 0)
 
     ############################## SUBPANEL A: HEATMAPS WITH TRACKS ##############################
     hm_axes = [Axis(fig[1, i], aspect = DataAspect()) for i in 1:4]
@@ -190,61 +220,62 @@ function make_fig()
     ylims!(ax_y_vel, -22, 22)
     hideydecorations!(ax_y_vel, grid = false)
 
-    ###################################### Row 4 ################################
-    hm_axes_row4 = [Axis(fig[4, i], aspect = DataAspect()) for i in 1:4]
-    hm = nothing
-    for (i, frame_idx) in enumerate(frame_idxs)
-        hm = heatmap!(hm_axes_row4[i], x, y, median_frames[:, :, frame_idx],
-                      colormap = :grays, colorrange = (0, 2))
-    end
+    # ###################################### Row 4 ################################
+    # hm_axes_row4 = [Axis(fig[4, i], aspect = DataAspect()) for i in 1:4]
+    # hm = nothing
+    # for (i, frame_idx) in enumerate(frame_idxs)
+    #     hm = heatmap!(hm_axes_row4[i], x, y, median_frames[:, :, frame_idx],
+    #                   colormap = :grays, colorrange = (0, 2))
+    # end
 
-    colors_trackmate = [[1, 2, 3], [1, 2, 3], [1, 1, 2, 2, 3], [1, 2]]
-    for (i, frame_idx) in enumerate(frame_idxs)
-        n_spots = length(spots_by_frame[frame_idx])
-        println("$n_spots at frame $frame_idx")
-        for j in 1:n_spots
-            color_idx = colors_trackmate[i][j]
-            arc!(hm_axes_row4[i], Point2f(spots_by_frame[frame_idx][j][2], spots_by_frame[frame_idx][j][1]), 
-                0.3/sqrt(2), -π, π, color=colors[color_idx], alpha=0.6, linewidth=3, linestyle=(:dot, :dense))
-        end
-        # for j in 1:3
-        #     arc!(hm_axes_row4[i], Point2f(track[frame_idx, 1, j], track[frame_idx, 2, j]), 0.185, -π, π, color = colors[j])
-        # end
-    end
+    # colors_trackmate = [[1, 2, 3], [1, 2, 3], [1, 1, 2, 2, 3], [1, 2]]
+    # for (i, frame_idx) in enumerate(frame_idxs)
+    #     n_spots = length(spots_by_frame[frame_idx])
+    #     println("$n_spots at frame $frame_idx")
+    #     for j in 1:n_spots
+    #         color_idx = colors_trackmate[i][j]
+    #         arc!(hm_axes_row4[i], Point2f(spots_by_frame[frame_idx][j][2], spots_by_frame[frame_idx][j][1]), 
+    #             0.3/sqrt(2), -π, π, color=colors[color_idx], alpha=0.6, linewidth=3, linestyle=(:dot, :dense))
+    #     end
+    #     # for j in 1:3
+    #     #     arc!(hm_axes_row4[i], Point2f(track[frame_idx, 1, j], track[frame_idx, 2, j]), 0.185, -π, π, color = colors[j])
+    #     # end
+    # end
 
-    lines!(hm_axes_row4[1],
-           [scalebar_start_x, scalebar_start_x + scalebar_length],
-           [scalebar_start_y, scalebar_start_y],
-           color = :white, linewidth = 4)
-    text!(hm_axes_row4[1],
-          scalebar_start_x + scalebar_length / 2,
-          scalebar_start_y + 0.08,
-          text = "1 μm",
-          align = (:center, :bottom),
-          color = :white)
+    # lines!(hm_axes_row4[1],
+    #        [scalebar_start_x, scalebar_start_x + scalebar_length],
+    #        [scalebar_start_y, scalebar_start_y],
+    #        color = :white, linewidth = 4)
+    # text!(hm_axes_row4[1],
+    #       scalebar_start_x + scalebar_length / 2,
+    #       scalebar_start_y + 0.08,
+    #       text = "1 μm",
+    #       align = (:center, :bottom),
+    #       color = :white)
 
-    for ax in hm_axes_row4
-        hidespines!(ax)
-        hidedecorations!(ax)
-    end
+    # for ax in hm_axes_row4
+    #     hidespines!(ax)
+    #     hidedecorations!(ax)
+    # end
 
-    Colorbar(fig[4, 5], hm, label = "# of photons", ticks=[0,1,2])
+    # Colorbar(fig[4, 5], hm, label = "# of photons", ticks=[0,1,2])
 
     ###################################### ADJUST LAYOUT ################################
     rowsize!(fig.layout, 1, Fixed(220))
     rowsize!(fig.layout, 2, Fixed(150))
     rowsize!(fig.layout, 3, Fixed(150))
-    rowsize!(fig.layout, 4, Fixed(220))
+    # rowsize!(fig.layout, 4, Fixed(220))
 
 
-    for (label, layout) in zip(["a", "b", "c", "d", "e", "f"], [fig[1, :], fig[2, 1:2], fig[2, 3:4], fig[3, 1:2], fig[3, 3:4], fig[4, :]])
+    # for (label, layout) in zip(["a", "b", "c", "d", "e", "f"], [fig[1, :], fig[2, 1:2], fig[2, 3:4], fig[3, 1:2], fig[3, 3:4], fig[4, :]])
+    for (label, layout) in zip(["a", "b", "c", "d", "e"], [fig[1, :], fig[2, 1:2], fig[2, 3:4], fig[3, 1:2], fig[3, 3:4]])
         Label(layout[1, 1, TopLeft()],
               label,
-              fontsize = 20,
+              fontsize = 16pt,
               font = "Arial Bold",
               halign = :right)
     end
-
+    return fig
 end
 
 function main()

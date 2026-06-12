@@ -90,7 +90,10 @@ map_tracks_79perc = map_sample.tracks;
 
 
 # -------- Set up plot params --------
-font_size = 20
+inch = 96
+pt = 4 / 3
+
+font_size = 14pt
 ticks_size = 18
 set_theme!(
     fontsize = font_size,              # Default for everything
@@ -123,7 +126,9 @@ mse_sp2t_no_blink = sqrt(mean(norm_sp2t_no_blink.^2))
 println("MAE QTrack (no photoblinking): ", mae_sp2t_no_blink)
 println("sqrt(MSE) QTrack (no photoblinking): ", mse_sp2t_no_blink)
 
-fig_err = Figure(size = (1000, 800), rowgap=0)
+# fig_err = Figure(size = (1000, 800), rowgap=0)
+fig_err = Figure(size = (12inch, 9.6inch), fontsize = 14pt, font = "Arial", rowgap=0)
+
 axes_list = []
 off_segments_all = []
 localization_error_all = []

@@ -38,7 +38,11 @@ batchsizes= [15, 255, 65535]
 milliseconds = [0.15, 2.55, 655.35]
 
 # ---- Figure / axes ----
-fig = Figure(size=(700, 250); figure_padding=2, colgap=0, rowgap=0)
+inch = 96
+pt = 4 / 3
+
+fig = Figure(size = (12inch, 4inch), fontsize = 14pt, font = "Arial")
+# fig = Figure(size=(700, 250); figure_padding=2, colgap=0, rowgap=0)
 
 ax1 = Axis(fig[1, 1], aspect=DataAspect(), title="4-bit ($(milliseconds[1]) ms)",  titlegap=2)
 ax2 = Axis(fig[1, 2], aspect=DataAspect(), title="8-bit ($(milliseconds[2]) ms)",  titlegap=2)
@@ -114,7 +118,7 @@ for (label, layout) in zip(["a", "b", "c"], [fig[1, 1], fig[1, 2], fig[1, 3]])
     Label(
         layout[1, 1, TopLeft()],
         label,
-        fontsize = 20,
+        fontsize = 16pt,
         font = "Arial Bold",
         halign = :right,
     )
@@ -127,7 +131,7 @@ Legend(fig[2, 1:3], [p_mb, p_gauss], ["Motion blur PSF", "Gaussian PSF"];
        tellheight=true, tellwidth=true,
        padding=(0, 0, 0, 0),
        patchsize=(22, 10),
-       patchlabelgap=6)
+       patchlabelgap=6),
 
 rowsize!(fig.layout, 2, Fixed(10))
 

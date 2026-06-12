@@ -4,6 +4,7 @@ using Statistics
 using StatsBase
 using Random
 using ColorSchemes
+using SP2TExtra
 include("../utils.jl") 
 
 const SCRIPT_DIR = @__DIR__
@@ -79,7 +80,11 @@ function main()
     bins = 0:step_val:max_val_plot
     hist_scale_factor = 0.7
 
-    fig = Figure(size=(1000, 500))
+    inch = 96
+    pt = 4 / 3
+
+    fig = Figure(size = (12inch, 6inch), fontsize = 14pt, font = "Arial")
+    # fig = Figure(size=(1000, 500))
     ax = Axis(
         fig[1, 1],
         xlabel = "Batchsize",

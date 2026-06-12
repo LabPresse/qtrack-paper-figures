@@ -6,7 +6,7 @@ echo "Figure 2..."
 julia --project=. ./Fig_2_S1_S2_S7_S8/Fig_2_S1_script.jl Fig_2 precomputed # ["precomputed", "test", ""]
 
 echo "Figure 3..."
-julia --project=. ./Fig_3/Fig_3_script.jl precomputed # ["precomputed", "test", ""]
+julia --project=. ./Fig_3_S9/Fig_3_script.jl precomputed # ["precomputed", "test", ""]
 
 echo "Figure 4..."
 julia --project=. ./Fig_4/Fig_4_script.jl
@@ -41,6 +41,9 @@ julia --project=. ./Fig_2_S1_S2_S7_S8/Fig_S7_script.jl precomputed # ["precomput
 
 echo "Figure S8..."
 julia --project=. ./Fig_2_S1_S2_S7_S8/Fig_S8_script.jl precomputed # ["precomputed", "test", ""]
+
+echo "Figure S9..."
+julia --project=. ./Fig_3_S9/Fig_S9_script.jl precomputed # ["precomputed", "test", ""]
 
 echo "Figure S6..."
 julia --project=. ./Fig_S6/Fig_S6_script.jl

@@ -96,7 +96,7 @@ for batchsize in batchsizes
         proposalparams = tuple(priors["brightness_proposal"]...),
     )
 
-    tracks = Tracks{FloatType}(
+    tracks_obj = Tracks{FloatType}(
         guess = CuArray(bintracks(tracks_1bit, batchsize)),
         prior = DNormal{FloatType}(
             CuArray(collect(detector.framecenter)),
@@ -112,7 +112,7 @@ for batchsize in batchsizes
 
     n_iters = test ? 1000 : inference_params["n_iters"]
     chain = runMCMC(
-        tracks = tracks,
+        tracks = tracks_obj,
         msd = msd,
         brightness = brightness,
         detector = detector,
@@ -123,7 +123,7 @@ for batchsize in batchsizes
     )
 
     chain_fname = joinpath(save_dir, "chain_$(batchsize).jld2")
-    jldsave(chain_fname; chain = chain, tracks = tracks, msd = msd, brightness = brightness, detector = detector, psf = psf)
+    jldsave(chain_fname; chain = chain, tracks = tracks_obj, msd = msd, brightness = brightness, detector = detector, psf = psf)
 end
 
 cp(toml_path, joinpath(save_dir, basename(toml_path)), force=!save_unique)

@@ -41,7 +41,11 @@ batchsizes = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 3000]
 size_limit = 1001
 indep_interval = 1 
 
-fig = Figure(size=(1000, 700), rowgap=0)
+inch = 96
+pt = 4 / 3
+
+fig = Figure(size = (12inch, 9inch), fontsize = 14pt, font = "Arial", rowgap=0)
+# fig = Figur/e(size=(1000, 700), rowgap=0)
 scale = :width
 axes_list = []
 bin_ranges = [
@@ -123,13 +127,13 @@ for (di, D_true) in enumerate(D_true_vals)
             )
     end
 
-    scatter!(1:length(batchsizes), Ds_batched_gt; 
+    scatter!(ax, 1:length(batchsizes), Ds_batched_gt; 
         label="Apparent diffusion coefficient", 
         markersize=20,
         marker=:xcross,
         color=:black
     )
-    hlines!(D_true, linestyle=:dash, color=:black, label="Ensemble diffusion coefficient (D=$D_true μm²/s)")
+    hlines!(ax, D_true, linestyle=:dash, color=:black, label="Ensemble diffusion coefficient (D=$D_true μm²/s)")
     # tick_labels = ["1\n(10 μs)", "2", "5", "10\n(100 μs)", "20", "50", "100\n(1 ms)"]
     tick_labels = string.(batchsizes)
     ax.xticks = (1:length(batchsizes), tick_labels)
@@ -138,6 +142,13 @@ end
 
 ylims!(axes_list[3], -0.05, 0.35)
 
+for (label, layout) in zip(["a", "b", "c"], [fig[1, 1], fig[2, 1], fig[3, 1]])
+    Label(layout[1, 1, TopLeft()],
+            label,
+            fontsize = 16pt,
+            font = "Arial Bold",
+            halign = :right)
+end
 
 # display(fig)
 

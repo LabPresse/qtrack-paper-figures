@@ -2,7 +2,7 @@ using Statistics
 using StatsBase
 using JLD2
 using SP2T
-# using SP2TExtra
+using SP2TExtra
 using CairoMakie
 using ColorSchemes
 using GeometryBasics
@@ -171,7 +171,7 @@ end
 function load_tracks_for_panel(inf_dir::AbstractString, sim_dir::AbstractString, batchsize::Int; burn_in::Int)
     chain = maybe_load_chain(inf_dir, batchsize)
     if chain !== nothing
-        track_samples = tracks_from_chain(chain, burn_in = burn_in)
+        track_samples = tracks(chain, burn_in = burn_in)
         return mean(track_samples, dims = 3), true
     end
 
@@ -551,7 +551,7 @@ W, H, _ = size(sumframes1_exp)
 batchsize_e = choose_batchsize(EXP_ROOT, 200, fallback = :largest)
 meantracks200 = batchsize_e === nothing ? nothing : begin
     chain = maybe_load_chain(EXP_ROOT, batchsize_e)
-    chain === nothing ? nothing : mean(tracks_from_chain(chain, burn_in = burn_in), dims = 3)
+    chain === nothing ? nothing : mean(tracks(chain, burn_in = burn_in), dims = 3)
 end
 
 heatmap!(ax_e_full, (0:W) .* exp_metadata["pixel size"], (0:H) .* exp_metadata["pixel size"], view(sumframes1_exp, :, :, 1), colormap = :grays)
@@ -605,7 +605,7 @@ translate!(lines!(fig.scene, getindex.(pts2, 1), getindex.(pts2, 2), color = :gr
 # Panel f (chain1)
 meantracks1_exp = begin
     chain = maybe_load_chain(EXP_ROOT, 1)
-    chain === nothing ? nothing : mean(tracks_from_chain(chain, burn_in = burn_in), dims = 3)
+    chain === nothing ? nothing : mean(tracks(chain, burn_in = burn_in), dims = 3)
 end
 
 heatmap!(ax_f_full, (0:W) .* exp_metadata["pixel size"], (0:H) .* exp_metadata["pixel size"], view(sumframes1_exp, :, :, 1), colormap = :grays)

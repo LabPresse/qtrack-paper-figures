@@ -54,7 +54,10 @@ frames_79perc = load(joinpath(dir_79perc, "frames.jld2"), "frames")
 states_79perc = load(joinpath(dir_79perc, "states.jld2"), "states")
 
 # -------- Set up plot params --------
-font_size = 20
+inch = 96
+pt = 4 / 3
+
+font_size = 14pt
 ticks_size = 18
 set_theme!(
     fontsize = font_size,              # Default for everything
@@ -73,7 +76,8 @@ pixel_size = sim_toml["camera"]["pixel_size"]
 lightblue = ColorSchemes.tab10.colors[10]
 pink = ColorSchemes.tab10.colors[7]
 
-fig = Figure(size=(800, 320); figure_padding=2, rowgap=2, colgap=2)
+fig = Figure(size = (12inch, 4.8inch), fontsize = 14pt, font = "Arial")
+# fig = Figure(size=(800, 320); figure_padding=2, rowgap=2, colgap=2)
 
 ax1 = Axis(fig[1, 1], aspect=DataAspect())
 ax2 = Axis(fig[1, 2], aspect=DataAspect())
