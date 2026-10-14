@@ -73,8 +73,6 @@ set_theme!(
 # ------- Plot --------
 detector_size = sim_toml["camera"]["detector_size"]
 pixel_size = sim_toml["camera"]["pixel_size"]
-lightblue = ColorSchemes.tab10.colors[10]
-pink = ColorSchemes.tab10.colors[7]
 
 fig = Figure(size = (12inch, 4.8inch), fontsize = 14pt, font = "Arial")
 # fig = Figure(size=(800, 320); figure_padding=2, rowgap=2, colgap=2)
@@ -93,7 +91,7 @@ end
 x = (0:detector_size-1) .* pixel_size .+ pixel_size/2
 y = (0:detector_size-1) .* pixel_size .+ pixel_size/2
 
-function plot_state_segments!(ax, traj, states; on_color=:blue, off_color=:indigo)
+function plot_state_segments!(ax, traj, states; on_color=PAPER_COLORS.green, off_color=PAPER_COLORS.vermillion)
     T = min(size(traj, 1), length(states))
     i = 1
     while i < T
@@ -120,6 +118,20 @@ plot_state_segments!(ax2, view(groundtruth, :, :, 1), states_55perc)
 heatmap!(ax3, x, y, view(sum(frames_79perc, dims=3), :, :, 1), colormap=:greys)
 plot_state_segments!(ax3, view(groundtruth, :, :, 1), states_79perc)
 
+write_source_matrix("Fig_S4", "a_summed_frames_45perc_on", view(sum(frames_45perc, dims=3), :, :, 1);
+    x = x, y = y, xlabel = "x_um", ylabel = "y_um")
+write_source_matrix("Fig_S4", "b_summed_frames_55perc_on", view(sum(frames_55perc, dims=3), :, :, 1);
+    x = x, y = y, xlabel = "x_um", ylabel = "y_um")
+write_source_matrix("Fig_S4", "c_summed_frames_79perc_on", view(sum(frames_79perc, dims=3), :, :, 1);
+    x = x, y = y, xlabel = "x_um", ylabel = "y_um")
+
+# The same ground-truth trajectory is drawn in all three panels, colored by each
+# panel's ON/OFF state trace
+write_source_csv("Fig_S4", "abc_groundtruth_track_with_states",
+    ["frame", "x_um", "y_um", "state_a_45perc_on", "state_b_55perc_on", "state_c_79perc_on"],
+    1:size(groundtruth, 1), groundtruth[:, 1, 1], groundtruth[:, 2, 1],
+    states_45perc, states_55perc, states_79perc)
+
 # Scale bar (keep your manual placement)
 x_start = 1.4  # µm
 y_pos   = 2.1  # µm
@@ -137,7 +149,7 @@ for (lab, ax) in zip(["a", "b", "c"], (ax1, ax2, ax3))
 end
 
 # Legend: anchor it inside the middle axis (top) to avoid extra row whitespace
-elems = [LineElement(color=:blue, linewidth=5), LineElement(color=:indigo, linewidth=5)]
+elems = [LineElement(color=PAPER_COLORS.green, linewidth=5), LineElement(color=PAPER_COLORS.vermillion, linewidth=5)]
 Legend(fig[1, 2, Top()], elems, ["ON", "OFF"];
        orientation=:horizontal, framevisible=false, tellheight=false,
        patchsize=(18, 10), padding=(2, 2, 2, 2), margin = (0, 0, -25, 0))  # pulls it closer downward)

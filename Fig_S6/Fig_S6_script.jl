@@ -11,7 +11,7 @@ const SCRIPT_DIR = @__DIR__
 const SAVE_DIR = abspath(joinpath(SCRIPT_DIR, "../figures"))
 mkpath(SAVE_DIR)
 
-const blue = ColorSchemes.tab10.colors[1]
+const blue = PAPER_COLORS.blue
 
 function calculate_msds(trajectories)
     distances = diff(trajectories, dims=1)
@@ -26,6 +26,7 @@ function calculate_D_apparent(trajectories, dt)
 end
 
 function main()
+    Random.seed!(1234) # fixed seed so the figure and its source data are reproducible
     n_simulations = 50000
     n_frames = 6000
     period = 1e-5
@@ -107,6 +108,18 @@ function main()
             scale_to = hist_scale_factor,
         )
     end
+
+    hist_cols = Vector{Vector{Float64}}()
+    hist_centers = Float64[]
+    for i in eachindex(batchsizes)
+        hist_centers, dens = binned_pdf(d_samples[i], bins)
+        push!(hist_cols, dens)
+    end
+    write_source_csv("Fig_S6", "a_apparent_D_histograms",
+        ["bin_center_D_um2_per_s"; string.("pdf_batchsize_", batchsizes)],
+        hist_centers, hist_cols...)
+    write_source_csv("Fig_S6", "a_ensemble_D",
+        ["ensemble_D_um2_per_s"], [diffusion_coefficient])
 
     save(joinpath(SAVE_DIR, "Fig_S6.pdf"), fig)
     # display(fig)

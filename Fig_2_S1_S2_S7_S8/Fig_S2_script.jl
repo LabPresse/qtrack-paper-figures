@@ -3,6 +3,7 @@ using JLD2
 using CairoMakie
 using Statistics
 using ColorSchemes
+include("../utils.jl")
 
 if length(ARGS) >= 1
     if ARGS[1] == "precomputed"
@@ -31,8 +32,8 @@ function main()
     batchsizes = [1, 2, 5, 10, 20, 50, 100]#, 200, 500, 1000, 2000, 3000]
     burn_in = 100
     period = 1e-5
-    color = ColorSchemes.tab10.colors[4]
-    cyan = ColorSchemes.tab10.colors[10]
+    color = PAPER_COLORS.blue # series in panel d are distinguished by marker shape
+    cyan = PAPER_COLORS.track
     markersize = 20
 
     inch = 96
@@ -52,6 +53,8 @@ function main()
     sum_frames = dropdims(sum(frames, dims=3), dims=3)
     heatmap!(ax_1, x, y, sum_frames, colormap=:grays)
     lines!(ax_1, gt_1[:, 1], gt_1[:, 2], color=cyan, linewidth=2, label="Ground truth")
+    write_source_matrix("Fig_S2", "a_summed_frames_traj1_133nm", sum_frames; x = x, y = y, xlabel = "x_um", ylabel = "y_um")
+    write_source_csv("Fig_S2", "a_groundtruth_track", ["x_um", "y_um"], gt_1[:, 1], gt_1[:, 2])
     hidedecorations!(ax_1)
     xlims!(ax_1, 1.75, 2.5)
     ylims!(ax_1, 0.4, 1.15)
@@ -67,6 +70,8 @@ function main()
     heatmap!(ax_2, x, y, sum_frames, colormap=:grays)
     gt = load(joinpath(SIM_ROOT, "sim_Fig_S1_D0.1", "groundtruth.jld2"), "tracks")
     lines!(ax_2, gt[:, 1], gt[:, 2], color=cyan, linewidth=2, label="Ground truth")
+    write_source_matrix("Fig_S2", "b_summed_frames_traj1_100nm", sum_frames; x = x, y = y, xlabel = "x_um", ylabel = "y_um")
+    write_source_csv("Fig_S2", "b_groundtruth_track", ["x_um", "y_um"], gt[:, 1], gt[:, 2])
     # lines!(ax_2, gt_1[:, 1] .- 0.3, gt_1[:, 2] .- 0.4, color=:red, linewidth=2, label="Ground truth")
     xlims!(ax_2, 1.5, 2.25)
     ylims!(ax_2, 0.0, 0.75)
@@ -85,6 +90,8 @@ function main()
     heatmap!(ax_3, x, y, sum_frames, colormap=:grays)
     gt = load(joinpath(SIM_ROOT, "sim_Fig_S2_D0.1", "groundtruth.jld2"), "tracks")
     lines!(ax_3, gt[:, 1], gt[:, 2], color=cyan, linewidth=2, label="Ground truth")
+    write_source_matrix("Fig_S2", "c_summed_frames_traj2_133nm", sum_frames; x = x, y = y, xlabel = "x_um", ylabel = "y_um")
+    write_source_csv("Fig_S2", "c_groundtruth_track", ["x_um", "y_um"], gt[:, 1], gt[:, 2])
     xlims!(ax_3, 1.55, 2.3)
     ylims!(ax_3, 1.46, 2.21)
     hidedecorations!(ax_3)
@@ -100,6 +107,9 @@ function main()
     s1 = nothing
     s2 = nothing
     s3 = nothing
+    err_traj1_133 = Float64[]
+    err_traj1_100 = Float64[]
+    err_traj2_133 = Float64[]
     for batchsize in batchsizes
         # First chain, original trajectory with Fig 2 parameters
         chain = load(joinpath(INF_ROOT, "inf_Fig_2_D0.1", "chain_$batchsize.jld2"), "chain")
@@ -111,6 +121,7 @@ function main()
         mean_sq_loc_err = mean(localization_errors) * 2 * 1000
         # println("\tBatchsize=$batchsize, loc err = $( mean(localization_errors) * 2)")
         s1 = scatter!(ax, batchsize * period, mean_sq_loc_err, markersize = markersize, color = color, marker=:circle)
+        push!(err_traj1_133, mean_sq_loc_err)
 
         # Second chain, original trajectory with Fig S1 parameters
         chain = load(joinpath(INF_ROOT, "inf_Fig_S1_D0.1", "chain_$batchsize.jld2"), "chain")
@@ -122,6 +133,7 @@ function main()
         mean_sq_loc_err = mean(localization_errors) * 2 * 1000
         # println("\tBatchsize=$batchsize, loc err = $( mean(localization_errors) * 2)")
         s2 = scatter!(ax, batchsize * period, mean_sq_loc_err, markersize = markersize, color = color, marker=:rect)
+        push!(err_traj1_100, mean_sq_loc_err)
 
         # Third chain, different trajectory with Fig 2 parameters
         chain = load(joinpath(INF_ROOT, "inf_Fig_S2_D0.1", "chain_$batchsize.jld2"), "chain")
@@ -133,6 +145,20 @@ function main()
         mean_sq_loc_err = mean(localization_errors) * 2 * 1000
         # println("\tBatchsize=$batchsize, loc err = $( mean(localization_errors) * 2)")
         s3 = scatter!(ax, batchsize * period, mean_sq_loc_err, markersize = markersize, color = color, marker=:star5)
+        push!(err_traj2_133, mean_sq_loc_err)
+    end
+
+    write_source_csv("Fig_S2", "d_localization_error_vs_exposure",
+        ["batchsize", "exposure_time_s",
+         "err_traj1_133nm_px_nm", "err_traj1_100nm_px_nm", "err_traj2_133nm_px_nm"],
+        batchsizes, batchsizes .* period, err_traj1_133, err_traj1_100, err_traj2_133)
+
+    for (label, layout) in zip(["a", "b", "c", "d"], [fig[1, 1], fig[1, 2], fig[1,3], fig[3, 1:3]])
+        Label(layout[1, 1, TopLeft()],
+              label,
+              fontsize = 20,
+              font = "Arial Bold",
+              halign = :right)
     end
 
     ######## Legend in row 2 using s1, s2, s3 as dummy scatter plots

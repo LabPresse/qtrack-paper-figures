@@ -30,10 +30,9 @@ const SCRIPT_DIR = @__DIR__
 const SAVE_DIR = abspath(joinpath(SCRIPT_DIR, "..", "figures"))
 const INF_ROOT = abspath(joinpath(SCRIPT_DIR, inf_dir_name))
 
-blue = ColorSchemes.tab10.colors[1]
-green = ColorSchemes.tab10.colors[3]
-red = ColorSchemes.tab10.colors[4]
-colors = [blue, green, red]
+# Colorblind-friendly Wong palette (Makie default), D->color mapping consistent
+# with Fig 2: D=10 green, D=1.0 orange, D=0.1 blue
+colors = [PAPER_COLORS.green, PAPER_COLORS.orange, PAPER_COLORS.blue]
 
 period = 10e-6
 burnin = 100
@@ -59,13 +58,13 @@ for (di, D_true) in enumerate(D_true_vals)
     dir = joinpath(INF_ROOT, "inf_Fig_2_D$D_true")
 
     ############# Get inferred D samples ###############
-    n_samples = length(collect(burnin:indep_interval:size_limit))
+    n_samples = length(collect(burnin+1:indep_interval:size_limit))
     D_inf_vals = []
     xs_violin = []
     for (j,batchsize) in enumerate(batchsizes)
         chainfile = joinpath(dir, "chain_$(batchsize).jld2")
         chain = load(chainfile, "chain")
-        samples = collect(burnin:indep_interval:size_limit)
+        samples = collect(burnin+1:indep_interval:size_limit)
         # msd_chain_vals = Float64[]
         # tracks_to_avg = zeros(length(samples), size(chain.samples[1].tracks, 1), size(chain.samples[1].tracks, 2))
         D_inf_j = []
@@ -116,7 +115,7 @@ for (di, D_true) in enumerate(D_true_vals)
     bins = bin_ranges[di][1]:bin_ranges[di][2]/n_bins:bin_ranges[di][2]
     # vertical histogram
     for i in 1:length(batchsizes)
-        hist!(ax, 
+        hist!(ax,
             D_inf_vals_list[i],
             bins=bins,
             direction=:x,
@@ -127,13 +126,27 @@ for (di, D_true) in enumerate(D_true_vals)
             )
     end
 
-    scatter!(ax, 1:length(batchsizes), Ds_batched_gt; 
+    hist_cols = Vector{Vector{Float64}}()
+    hist_centers = Float64[]
+    for i in 1:length(batchsizes)
+        hist_centers, dens = binned_pdf(Float64.(D_inf_vals_list[i]), bins)
+        push!(hist_cols, dens)
+    end
+    write_source_csv("Fig_S7", "row$(di)_D$(D_true)_posterior_histograms",
+        ["bin_center_D_um2_per_s"; string.("pdf_batchsize_", batchsizes)],
+        hist_centers, hist_cols...)
+
+    scatter!(1:length(batchsizes), Ds_batched_gt; 
         label="Apparent diffusion coefficient", 
         markersize=20,
         marker=:xcross,
         color=:black
     )
-    hlines!(ax, D_true, linestyle=:dash, color=:black, label="Ensemble diffusion coefficient (D=$D_true μm²/s)")
+    hlines!(D_true, linestyle=:dash, color=:black, label="Ensemble diffusion coefficient (D=$D_true μm²/s)")
+
+    write_source_csv("Fig_S7", "row$(di)_D$(D_true)_apparent_D_groundtruth",
+        ["batchsize", "apparent_D_um2_per_s", "ensemble_D_um2_per_s"],
+        batchsizes, Float64.(Ds_batched_gt), fill(D_true, length(batchsizes)))
     # tick_labels = ["1\n(10 μs)", "2", "5", "10\n(100 μs)", "20", "50", "100\n(1 ms)"]
     tick_labels = string.(batchsizes)
     ax.xticks = (1:length(batchsizes), tick_labels)

@@ -35,7 +35,8 @@ gt_tracks = load(joinpath(dir, "groundtruth.jld2"), "tracks")
 gt_frames = load(joinpath(dir, "frames.jld2"), "frames")
 
 batchsizes= [15, 255, 65535]
-milliseconds = [0.15, 2.55, 655.35]
+# Durations of the summed frame ranges below (16, 256, and 65536 frames at 0.01 ms)
+milliseconds = [0.16, 2.56, 655.36]
 
 # ---- Figure / axes ----
 inch = 96
@@ -69,6 +70,10 @@ heatmap!(ax1, x, y, img4bit;  colormap=cmap)
 heatmap!(ax2, x, y, img8bit;  colormap=cmap)
 heatmap!(ax3, x, y, img16bit; colormap=cmap)
 
+write_source_matrix("Fig_S3", "a_summed_frames_4bit",  img4bit;  x = x, y = y, xlabel = "x_um", ylabel = "y_um")
+write_source_matrix("Fig_S3", "b_summed_frames_8bit",  img8bit;  x = x, y = y, xlabel = "x_um", ylabel = "y_um")
+write_source_matrix("Fig_S3", "c_summed_frames_16bit", img16bit; x = x, y = y, xlabel = "x_um", ylabel = "y_um")
+
 # ---- Add scale bar ----
 x_start=0.5
 y_pos=0.5
@@ -98,8 +103,8 @@ s4  = normalize_slice(img4bit[:,  line_idx])
 s8  = normalize_slice(img8bit[:,  line_idx])
 s16 = normalize_slice(img16bit[:, line_idx])
 
-psf_color = ColorSchemes.tab10.colors[end] # light blue
-mb_color  = ColorSchemes.tab10.colors[2] # orange
+psf_color = PAPER_COLORS.blue # cyan/sky tones are reserved for track overlays
+mb_color  = PAPER_COLORS.orange
 p_gauss = lines!(ax1, x_fine, line_cut .+ ideal_psf; color=psf_color) # handles for legend
 p_mb    = lines!(ax1, x,      line_cut .+ s4;       color=mb_color)
 
@@ -112,6 +117,18 @@ lines!(ax3, x,      line_cut .+ s16;       color=mb_color)
 hlines!(ax1, line_cut; color=mb_color, linestyle=:dash)
 hlines!(ax2, line_cut; color=mb_color, linestyle=:dash)
 hlines!(ax3, line_cut; color=mb_color, linestyle=:dash)
+
+# Profiles are drawn vertically offset by line_cut (the dashed line's y position)
+write_source_csv("Fig_S3", "abc_ideal_gaussian_psf",
+    ["x_um", "normalized_intensity"], x_fine, ideal_psf)
+write_source_csv("Fig_S3", "a_motion_blur_profile_4bit",
+    ["x_um", "normalized_intensity"], x, s4)
+write_source_csv("Fig_S3", "b_motion_blur_profile_8bit",
+    ["x_um", "normalized_intensity"], x, s8)
+write_source_csv("Fig_S3", "c_motion_blur_profile_16bit",
+    ["x_um", "normalized_intensity"], x, s16)
+write_source_csv("Fig_S3", "abc_line_cut",
+    ["line_cut_y_um"], [line_cut])
 
 # ---- Panel labels (inside axes, no layout whitespace) ----
 for (label, layout) in zip(["a", "b", "c"], [fig[1, 1], fig[1, 2], fig[1, 3]])

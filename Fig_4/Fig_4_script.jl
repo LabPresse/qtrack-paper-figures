@@ -3,6 +3,7 @@ using CairoMakie
 using JLD2
 
 dir = joinpath(pwd(), "Fig_4")
+include(joinpath(dir, "..", "utils.jl"))
 
 metadata = load(joinpath(dir, "metadata.jld2"), "metadata")
 
@@ -39,8 +40,11 @@ for (i, factor) in enumerate(factors)
         view(avgframes, :, :, 1),
         colormap = :bone,
     )
+    write_source_matrix("Fig_4", "a_mean_frame_factor_$(factor)", view(avgframes, :, :, 1);
+        x = ((0:127) .+ 0.5) .* metadata["pixel size"], y = ((0:127) .+ 0.5) .* metadata["pixel size"],
+        xlabel = "x_um", ylabel = "y_um")
     rangebars!(axis[end], [0.3], [0.1], [5.1], direction = :x, color = :white)
-    text!(axis[end], 2.55, 0.3, text = "2 μm", color = :white, align = (:center, :bottom))
+    text!(axis[end], 2.55, 0.3, text = "5 μm", color = :white, align = (:center, :bottom))
 end
 hidedecorations!.(axis)
 hidespines!.(axis)
@@ -56,6 +60,10 @@ accuracyTM = [100.0, 100.0, 97.0, 54.0, 10.0]
 l1 = scatterlines!(accuracyaxis, 58.3737 .* factors, fill(100, length(factors)))
 l2 = scatterlines!(accuracyaxis, 58.3737 .* factors, fill(100, length(factors)))
 l3 = scatterlines!(accuracyaxis, 58.3737 .* factors, accuracyTM)
+
+write_source_csv("Fig_4", "b_detection_rate",
+    ["background_photons", "bnp_track_pct", "qtrack_pct", "trackmate_pct"],
+    58.3737 .* factors, fill(100, length(factors)), fill(100, length(factors)), accuracyTM)
 
 timeaxis = Axis(
     fig[4, :],
@@ -80,6 +88,10 @@ timesTM = [0.001, 0.001, 0.001, 0.001, 0.001]
 scatterlines!(timeaxis, 58.3737 .* factors, times1)
 scatterlines!(timeaxis, 58.3737 .* factors, times2)
 scatterlines!(timeaxis, 58.3737 .* factors, timesTM)
+
+write_source_csv("Fig_4", "c_time_per_iteration",
+    ["background_photons", "bnp_track_s", "qtrack_s", "trackmate_s"],
+    58.3737 .* factors, times1, times2, timesTM)
 
 linkxaxes!(accuracyaxis, timeaxis)
 xlims!(timeaxis, 28.3, 600)
@@ -108,4 +120,5 @@ end
 colgap!(fig.layout, 0)
 rowgap!(fig.layout, 0)
 rowsize!(fig.layout, 2, 12)
+mkpath(joinpath(dir, "../figures"))
 save(joinpath(dir, "../figures/Fig_4.pdf"), fig)

@@ -1,7 +1,70 @@
 using CairoMakie
+using ColorSchemes
 using Dates
 using StatsBase
 # several of these functions are copied from the SP2TExtra repository]
+
+# ---------------- Shared paper palette ----------------
+# Wong colors (colorblind-safe; also Makie's default palette, so figures that
+# rely on default color cycling match automatically). Reserved roles:
+# `track` is used only for inferred-track overlays on images, and `locerror`
+# only for localization-error shading.
+const PAPER_COLORS = (
+    blue       = Makie.wong_colors()[1],
+    orange     = Makie.wong_colors()[2],
+    green      = Makie.wong_colors()[3],
+    pink       = Makie.wong_colors()[4],
+    skyblue    = Makie.wong_colors()[5],
+    vermillion = Makie.wong_colors()[6],
+    yellow     = Makie.wong_colors()[7],
+    track      = ColorSchemes.tab10[10],
+    locerror   = ColorSchemes.tab20[8],
+)
+
+# ---------------- Source Data export ----------------
+# Figure scripts dump the numerical values behind each plotted series to
+# source_data/<figure>/<block>.csv; make_source_data.py assembles the
+# journal's Source Data workbook from these files.
+
+const SOURCE_DATA_ROOT = joinpath(@__DIR__, "source_data")
+
+function source_data_path(figname::AbstractString, block::AbstractString)
+    dir = joinpath(SOURCE_DATA_ROOT, figname)
+    mkpath(dir)
+    return joinpath(dir, block * ".csv")
+end
+
+function write_source_csv(figname::AbstractString, block::AbstractString, headers, cols...)
+    columns = [vec(collect(c)) for c in cols]
+    n = maximum(length.(columns))
+    open(source_data_path(figname, block), "w") do io
+        println(io, join(headers, ","))
+        for i in 1:n
+            println(io, join((i <= length(c) ? c[i] : "" for c in columns), ","))
+        end
+    end
+    return nothing
+end
+
+function write_source_matrix(figname::AbstractString, block::AbstractString, M::AbstractMatrix;
+                             x = axes(M, 1), y = axes(M, 2), xlabel = "x", ylabel = "y")
+    # CSV rows run over y, columns over x, matching heatmap!(x, y, M) orientation
+    open(source_data_path(figname, block), "w") do io
+        println(io, join([string(ylabel, "\\", xlabel); string.(collect(x))], ","))
+        for (j, yj) in enumerate(y)
+            println(io, join([yj; vec(M[:, j])], ","))
+        end
+    end
+    return nothing
+end
+
+# Bin `data` exactly as hist!(...; bins = edges, normalization = :pdf) does
+function binned_pdf(data::AbstractVector{<:Real}, edges::AbstractRange)
+    h = fit(Histogram, data, edges)
+    density = h.weights ./ (sum(h.weights) * step(edges))
+    centers = (edges[1:end-1] .+ edges[2:end]) ./ 2
+    return collect(centers), density
+end
 
 function get_unique_datadir(base_path, dir_name)
     # 1. Create the initial date-prefixed name

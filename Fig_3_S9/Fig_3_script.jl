@@ -135,11 +135,14 @@ function make_fig()
     for (i, frame_idx) in enumerate(frame_idxs)
         hm = heatmap!(hm_axes[i], x, y, frames15[:, :, frame_idx],
                       colormap = :grays, colorrange = (0, max_photon_count))
+        write_source_matrix("Fig_3", "a_binned_frame_$(frame_idx)", frames15[:, :, frame_idx];
+            x = x, y = y, xlabel = "x_um", ylabel = "y_um")
     end
 
+    circle_radius = 0.185 # μm, radius of the circles marking the inferred positions
     for (i, frame_idx) in enumerate(frame_idxs)
         for j in 1:3
-            arc!(hm_axes[i], Point2f(track[frame_idx, 1, j], track[frame_idx, 2, j]), 0.185, -π, π, color = colors[j], alpha=0.6, linewidth=3)
+            arc!(hm_axes[i], Point2f(track[frame_idx, 1, j], track[frame_idx, 2, j]), circle_radius, -π, π, color = colors[j], alpha=0.6, linewidth=3)
             # scatter!(hm_axes[i],
             #          track[frame_idx, 1, j],
             #          track[frame_idx, 2, j] - arrow_offset,
@@ -148,6 +151,16 @@ function make_fig()
             #          color = colors[j])
         end
     end
+
+    # Circled positions (from the last chain sample)
+    write_source_csv("Fig_3", "a_marker_positions",
+        ["frame_index", "time_s", "particle", "x_um", "y_um", "circle_radius_um"],
+        repeat(frame_idxs, inner = 3),
+        repeat(t[frame_idxs], inner = 3),
+        repeat(1:3, outer = length(frame_idxs)),
+        [track[fi, 1, j] for fi in frame_idxs for j in 1:3],
+        [track[fi, 2, j] for fi in frame_idxs for j in 1:3],
+        fill(circle_radius, 3 * length(frame_idxs)))
 
     scalebar_length = 1.0
     scalebar_start_x = 0.2
@@ -182,6 +195,18 @@ function make_fig()
     img_x = rgb_confidence_image(crediblex1, crediblex2, crediblex3; scale = scale)
     img_y = rgb_confidence_image(credibley1, credibley2, credibley3; scale = scale)
 
+    # Per-particle posterior densities behind the RGB composites (positions are
+    # relative to each particle's mean position; RGB channels divide by `scale`)
+    edge_centers = (edges[1:end-1] .+ edges[2:end]) ./ 2
+    for (j, (cx, cy)) in enumerate(zip((crediblex1, crediblex2, crediblex3),
+                                       (credibley1, credibley2, credibley3)))
+        write_source_matrix("Fig_3", "b_posterior_density_x_particle$(j)", cx;
+            x = collect(t), y = edge_centers, xlabel = "time_s", ylabel = "x_position_um")
+        write_source_matrix("Fig_3", "c_posterior_density_y_particle$(j)", cy;
+            x = collect(t), y = edge_centers, xlabel = "time_s", ylabel = "y_position_um")
+    end
+    write_source_csv("Fig_3", "bc_rgb_normalization_scale", ["scale"], [scale])
+
     image!(ax_x_pos, t[1] .. t[end], edges[1] .. edges[end], img_x)
     image!(ax_y_pos, t[1] .. t[end], edges[1] .. edges[end], img_y)
 
@@ -203,6 +228,13 @@ function make_fig()
         lines!(ax_x_vel, t[1:end-1], vel_mean_x[:, j], color = colors[j])
         lines!(ax_y_vel, t[1:end-1], vel_mean_y[:, j], color = colors[j])
     end
+
+    write_source_csv("Fig_3", "d_velocity_x",
+        ["time_s", "velocity_particle1_um_per_s", "velocity_particle2_um_per_s", "velocity_particle3_um_per_s"],
+        t[1:end-1], vel_mean_x[:, 1], vel_mean_x[:, 2], vel_mean_x[:, 3])
+    write_source_csv("Fig_3", "e_velocity_y",
+        ["time_s", "velocity_particle1_um_per_s", "velocity_particle2_um_per_s", "velocity_particle3_um_per_s"],
+        t[1:end-1], vel_mean_y[:, 1], vel_mean_y[:, 2], vel_mean_y[:, 3])
 
     # vlines!(ax_x_pos, 0.1355, color = :red, linestyle = :dash)
     # vlines!(ax_x_pos, 0.1475, color = :red, linestyle = :dash)
@@ -280,6 +312,7 @@ end
 
 function main()
     fig = make_fig()
+    mkpath(joinpath(@__DIR__, "..", "figures"))
     save(joinpath(@__DIR__, "..", "figures", "Fig_3.pdf"), fig)
     # display(fig)
 end

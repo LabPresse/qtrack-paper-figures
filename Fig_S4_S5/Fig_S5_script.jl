@@ -109,8 +109,8 @@ set_theme!(
 # ------- Plot --------
 detector_size = sim_toml["camera"]["detector_size"]
 pixel_size = sim_toml["camera"]["pixel_size"]
-lightblue = ColorSchemes.tab10.colors[10]
-pink = ColorSchemes.tab10.colors[7]
+noblink_color = PAPER_COLORS.blue
+blink_color = PAPER_COLORS.pink
 
 ############## Plot all 3 states ####################
 savefig = true
@@ -179,17 +179,20 @@ for (j, state) in enumerate(states_perc)
     end
 
     # Plot error traces
-    lines!(ax, t_vals, norm_sp2t_no_blink, 
+    lines!(ax, t_vals, norm_sp2t_no_blink,
         # color=:skyblue,
-        color=lightblue, 
+        color=noblink_color,
         linewidth=2,
         label="QTrack (no photoblinking)")
 
-    lines!(ax, t_vals, norm_sp2t_perc, 
-        # color=:gold, 
-        color=pink,
+    lines!(ax, t_vals, norm_sp2t_perc,
+        # color=:gold,
+        color=blink_color,
         linewidth=2,
         label="QTrack (photoblinking)")
+
+    write_source_csv("Fig_S5", "$(("a", "b", "c")[j])_localization_error_$(("45perc_on", "55perc_on", "79perc_on")[j])",
+        ["time_s", "error_um", "state_on"], t_vals, norm_sp2t_perc, state)
 
     off_idxs = state .== 0
     perc = mean(norm_sp2t_perc[off_idxs] .<= diff_lim_488)
@@ -201,7 +204,7 @@ for (j, state) in enumerate(states_perc)
 
     println("Diffraction limit: $diff_lim_488 m")
     hlines!(ax, diff_lim_488,
-            linestyle=:dashdot, color=:red, linewidth=2,
+            linestyle=:dashdot, color=PAPER_COLORS.vermillion, linewidth=2,
             label="Diffraction limit")
 
     if j==1
@@ -209,6 +212,12 @@ for (j, state) in enumerate(states_perc)
     end
 end
 linkyaxes!(axes_list...)
+
+# The no-photoblinking error trace is the same series in all three rows
+write_source_csv("Fig_S5", "abc_localization_error_no_blink",
+    ["time_s", "error_um"], t_vals, norm_sp2t_no_blink)
+write_source_csv("Fig_S5", "abc_reference_lines",
+    ["pixel_width_um", "diffraction_limit_um"], [sim_toml["camera"]["pixel_size"]], [diff_lim_488])
 
 for (label, layout) in zip(["a", "b", "c"], [fig_err[1, :], fig_err[2, :], fig_err[3, :]])
     Label(

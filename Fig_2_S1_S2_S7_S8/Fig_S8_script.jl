@@ -4,7 +4,9 @@ using CairoMakie
 using Statistics
 using TOML
 using ColorSchemes
-orange = ColorSchemes.tab10.colors[2]
+include("../utils.jl")
+# Wong-palette pink (Makie default palette), used for experimental results
+pink = PAPER_COLORS.pink
 
 ################################# Code to plot experimental histogram ######################
 # toml_dir = length(ARGS) >= 1 ? ARGS[1] : "."
@@ -49,10 +51,10 @@ ax = Axis(fig[1,1],
         )
 
 bins = range(0.15, 0.43, length = 50)
-hist!(ax, dvals1, 
+hist!(ax, dvals1,
     bins = bins,
-    color = orange, 
-    strokewidth = 1, 
+    color = pink,
+    strokewidth = 1,
     strokecolor = :white,
     normalization=:pdf,
     label = "Batch size = 1",
@@ -68,5 +70,11 @@ hist!(ax, dvals2,
 )
 # hideydecorations!(ax, grid=false)
 axislegend(ax, position=:rt)
+
+centers, pdf_bs1 = binned_pdf(collect(dvals1), bins)
+~, pdf_bs2 = binned_pdf(collect(dvals2), bins)
+write_source_csv("Fig_S8", "a_experimental_D_posterior_histograms",
+    ["bin_center_D_um2_per_s", "pdf_batchsize_1", "pdf_batchsize_2"],
+    centers, pdf_bs1, pdf_bs2)
 mkpath(SAVE_DIR)
 save(joinpath(SAVE_DIR, "Fig_S8.pdf"), fig)

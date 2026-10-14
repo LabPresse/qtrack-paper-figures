@@ -3,4 +3,8 @@
 */precomputed_inference_results/*
 /figures/*
 old_*
-*/test_inference_results/*
+*/test_*
+Fig_S3/sim_Fig_S3_motion_blur/
+Fig_S3/precomputed_sim_Fig_S3_motion_blur/
+source_data/
+Source_Data.xlsx

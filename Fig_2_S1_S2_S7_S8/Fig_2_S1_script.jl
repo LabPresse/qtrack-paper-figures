@@ -190,6 +190,8 @@ function maybe_scatter_simulation_results!(ax_loc, ax_diff, Dsim, metadata, colo
     isempty(chains) && return Int[]
 
     local batchsizes_seen = Int[]
+    loc_errs = Float64[]
+    diff_errs = Float64[]
     println("\nD=$Dsim")
     for (batchsize, chain) in chains
         push!(batchsizes_seen, batchsize)
@@ -204,7 +206,16 @@ function maybe_scatter_simulation_results!(ax_loc, ax_diff, Dsim, metadata, colo
         println("\tBatchsize=$batchsize, loc err = $( mean(localization_errors) * 2)")
         scatter!(ax_loc, batchsize * metadata["period"], mean(localization_errors) * 2, markersize = 10, color = color)
         scatter!(ax_diff, batchsize * metadata["period"], quantiles[2] - quantiles[1], markersize = 10, color = color)
+        push!(loc_errs, mean(localization_errors) * 2)
+        push!(diff_errs, quantiles[2] - quantiles[1])
     end
+
+    write_source_csv(figure_name, "c_scatter_D$(Dsim)",
+        ["batchsize", "exposure_time_s", "dynamic_localization_error_um"],
+        batchsizes_seen, batchsizes_seen .* metadata["period"], loc_errs)
+    write_source_csv(figure_name, "d_scatter_D$(Dsim)",
+        ["batchsize", "exposure_time_s", "diffusion_coefficient_error_um2_per_s"],
+        batchsizes_seen, batchsizes_seen .* metadata["period"], diff_errs)
 
     return batchsizes_seen
 end
@@ -296,11 +307,13 @@ colgap!(fig.layout, 15)
 # Legends and labels
 # =========================
 
+# Colorblind-friendly Wong palette (Makie default): D=0.1 blue, D=1.0 orange,
+# D=10 green, experiment pink. Same palette as Figs 4-7.
 colors = [
-    ColorSchemes.tab10[4],
-    ColorSchemes.tab10[3],
-    ColorSchemes.tab10[1],
-    ColorSchemes.tab10[2],
+    PAPER_COLORS.blue,
+    PAPER_COLORS.orange,
+    PAPER_COLORS.green,
+    PAPER_COLORS.pink,
 ]
 
 group_diffusion = [
@@ -311,8 +324,8 @@ group_diffusion = [
 ]
 group_method = [MarkerElement(color = :black, marker = :circle), LineElement(color = :black)]
 
-elemtraj = LineElement(color = ColorSchemes.tab10[10], points = Point2f[(0, 0.5), (1, 0.5)])
-elemerror = PolyElement(color = ColorSchemes.tab20[8], alpha = 0.5)
+elemtraj = LineElement(color = PAPER_COLORS.track, points = Point2f[(0, 0.5), (1, 0.5)])
+elemerror = PolyElement(color = PAPER_COLORS.locerror, alpha = 0.5)
 
 Legend(
     fig[0, 1:2],
@@ -383,6 +396,11 @@ for (c, Dsim) in zip(colors, Ds)
 
     lines!(ax_c, texp, 2 .* σ, color = c)
     lines!(ax_d, texp, 2 .* S .* Dsim, color = c)
+
+    write_source_csv(figure_name, "c_theory_D$(Dsim)",
+        ["exposure_time_s", "dynamic_localization_error_um"], texp, 2 .* σ)
+    write_source_csv(figure_name, "d_theory_D$(Dsim)",
+        ["exposure_time_s", "diffusion_coefficient_error_um2_per_s"], texp, 2 .* S .* Dsim)
 end
 
 # Calc again to just print for right batchsizes
@@ -416,33 +434,61 @@ chains_exp = load_chains_from_dir(EXP_ROOT)
 exp_camera_params = TOML.parsefile(joinpath(EXP_ROOT, "exp_camera_params.toml"))["camera"]
 exp_metadata = camera_metadata(exp_camera_params)
 
+# PSF and brightness of the experimental setup (panels e, g, h)
+psf_exp = CircularGaussian{Float64}(
+    numerical_aperture   = exp_metadata["numerical aperture"],
+    refractive_index     = exp_metadata["refractive index"],
+    emission_wavelength  = exp_metadata["wavelength"],
+    pixel_size           = exp_metadata["pixel size"],
+)
+brightness_exp = 1.5e3
+D_exp = 0.2556
+
+exp_batchsizes = Int[]
+exp_loc_errs = Float64[]
+exp_diff_errs = Float64[]
 for (batchsize, chain) in chains_exp
     msds = chain.msds[burn_in+1:end] ./ (2 * batchsize * exp_metadata["period"])
     quantiles = quantile(msds, 0.5 .+ 0.34134474606854304 .* [-1, 1])
 
-    localization_errors = localization_error(chain, burn_in = burn_in) * 2 
+    localization_errors = localization_error(chain, burn_in = burn_in) * 2
     # multiply by 2 to cancel out random divide by 2 in the function
 
-    # CHANGED: multiply by sqrt(2) instead of 2  because 2D localization error is already sqrt(2) 
+    # CHANGED: multiply by sqrt(2) instead of 2  because 2D localization error is already sqrt(2)
     # times the 1D error (assuming isotropic errors in x and y). This yields correct 2*sigma width.
     # scatter!(ax_g, batchsize * 50e-6, localization_errors .* 2, markersize = 10, color = colors[4])
     scatter!(ax_g, batchsize * exp_metadata["period"], localization_errors .* sqrt(2), markersize = 10, color = colors[4])
     scatter!(ax_h, batchsize * exp_metadata["period"], (quantiles[2] - quantiles[1]), markersize = 10, color = colors[4])
+    push!(exp_batchsizes, batchsize)
+    push!(exp_loc_errs, localization_errors * sqrt(2))
+    push!(exp_diff_errs, quantiles[2] - quantiles[1])
 end
 
-for Dexp in [0.2556]
+write_source_csv(figure_name, "g_scatter_experiment",
+    ["batchsize", "exposure_time_s", "dynamic_localization_error_um"],
+    exp_batchsizes, exp_batchsizes .* exp_metadata["period"], exp_loc_errs)
+write_source_csv(figure_name, "h_scatter_experiment",
+    ["batchsize", "exposure_time_s", "diffusion_coefficient_error_um2_per_s"],
+    exp_batchsizes, exp_batchsizes .* exp_metadata["period"], exp_diff_errs)
+
+for Dexp in [D_exp]
     batchsizes = logrange(1, 3000, length = 1001)
     texp = exp_metadata["period"] .* batchsizes
 
     R  = pre_eq5(texp, texp)
-    σ₀ = pre_eq14(psf.σ, 1.5e3, texp)
-    σ  = pre_eq1(σ₀, Dexp, texp, psf.σ)
+    σ₀ = pre_eq14(psf_exp.σ, brightness_exp, texp)
+    σ  = pre_eq1(σ₀, Dexp, texp, psf_exp.σ)
 
     x = pre_eq13(σ, Dexp, texp, R)
     S = pre_eq12(2, 6800 ./ batchsizes, x)
 
     lines!(ax_g, texp, 2 .* σ, color = colors[4])
     lines!(ax_h, texp, 2 .* S .* Dexp, color = colors[4])
+
+    write_source_csv(figure_name, "g_theory_experiment",
+        ["exposure_time_s", "dynamic_localization_error_um"], texp, 2 .* σ)
+    write_source_csv(figure_name, "h_theory_experiment",
+        ["exposure_time_s", "diffusion_coefficient_error_um2_per_s"], texp, 2 .* S .* Dexp)
 end
 
 xlims!(ax_g, 4e-5, 0.21)
@@ -467,8 +513,12 @@ meantracks1000, has_inference_a = load_tracks_for_panel(sim_inf_dir, sim_img_dir
 
 heatmap!(ax_a_full, (0:W) .* metadata["pixel size"], (0:H) .* metadata["pixel size"], view(sumframes1, :, :, 1), colormap = :grays)
 if meantracks1000 !== nothing
-    lines!(ax_a_full, view(meantracks1000, :, 1, 1), view(meantracks1000, :, 2, 1), color = ColorSchemes.tab10[10])
+    lines!(ax_a_full, view(meantracks1000, :, 1, 1), view(meantracks1000, :, 2, 1), color = PAPER_COLORS.track)
 end
+
+write_source_matrix(figure_name, "ab_summed_frames_D10.0", view(sumframes1, :, :, 1);
+    x = ((0:W-1) .+ 0.5) .* metadata["pixel size"], y = ((0:H-1) .+ 0.5) .* metadata["pixel size"],
+    xlabel = "x_um", ylabel = "y_um")
 
 heatmap!(ax_a_zoom, (0:W) .* metadata["pixel size"], (0:H) .* metadata["pixel size"], view(sumframes1, :, :, 1), colormap = :grays)
 
@@ -479,11 +529,15 @@ R  = pre_eq5(metadata["period"] * batchsize_a_for_sigma, metadata["period"] * ba
 
 if has_inference_a && meantracks1000 !== nothing
     for r in eachslice(meantracks1000, dims = 1)
-        arc!(ax_a_zoom, Point2f(r[1], r[2]), σ, -π, π, color = ColorSchemes.tab20[8], alpha = 0.5)
+        arc!(ax_a_zoom, Point2f(r[1], r[2]), σ, -π, π, color = PAPER_COLORS.locerror, alpha = 0.5)
     end
 end
 if meantracks1000 !== nothing
-    lines!(ax_a_zoom, view(meantracks1000, :, 1, 1), view(meantracks1000, :, 2, 1), color = ColorSchemes.tab10[10])
+    lines!(ax_a_zoom, view(meantracks1000, :, 1, 1), view(meantracks1000, :, 2, 1), color = PAPER_COLORS.track)
+    write_source_csv(figure_name, "a_track_posterior_mean_bs$(batchsize_a_for_tracks)",
+        ["x_um", "y_um", "uncertainty_circle_radius_um"],
+        view(meantracks1000, :, 1, 1), view(meantracks1000, :, 2, 1),
+        fill(σ, size(meantracks1000, 1)))
 end
 
 # bounds_ab = simulation_bounds_ab(metadata)
@@ -520,15 +574,18 @@ meantracks1_sim, _ = load_tracks_for_panel(sim_inf_dir, sim_img_dir, 1; burn_in 
 
 heatmap!(ax_b_full, (0:W) .* metadata["pixel size"], (0:H) .* metadata["pixel size"], view(sumframes1, :, :, 1), colormap = :grays)
 if meantracks1_sim !== nothing
-    lines!(ax_b_full, view(meantracks1_sim, :, 1, 1), view(meantracks1_sim, :, 2, 1), color = ColorSchemes.tab10[10])
+    lines!(ax_b_full, view(meantracks1_sim, :, 1, 1), view(meantracks1_sim, :, 2, 1), color = PAPER_COLORS.track)
+    write_source_csv(figure_name, "b_track_posterior_mean_bs1",
+        ["x_um", "y_um"],
+        view(meantracks1_sim, :, 1, 1), view(meantracks1_sim, :, 2, 1))
 end
 poly!(ax_b_full, p_ab, color = :gray70)
 
 heatmap!(ax_b_zoom, (0:W) .* metadata["pixel size"], (0:H) .* metadata["pixel size"], view(sumframes1, :, :, 1), colormap = :grays)
 if meantracks1_sim !== nothing
     lines!(ax_b_zoom, view(meantracks1_sim, :, 1, 1), view(meantracks1_sim, :, 2, 1),
-          alpha = 0.5, color = ColorSchemes.tab20[8], linewidth = 15.0)
-    lines!(ax_b_zoom, view(meantracks1_sim, :, 1, 1), view(meantracks1_sim, :, 2, 1), color = ColorSchemes.tab10[10])
+          alpha = 0.5, color = PAPER_COLORS.locerror, linewidth = 15.0)
+    lines!(ax_b_zoom, view(meantracks1_sim, :, 1, 1), view(meantracks1_sim, :, 2, 1), color = PAPER_COLORS.track)
 end
 
 limits!(ax_b_zoom, bounds_ab...)
@@ -556,21 +613,29 @@ end
 
 heatmap!(ax_e_full, (0:W) .* exp_metadata["pixel size"], (0:H) .* exp_metadata["pixel size"], view(sumframes1_exp, :, :, 1), colormap = :grays)
 if meantracks200 !== nothing
-    lines!(ax_e_full, view(meantracks200, :, 1, 1), view(meantracks200, :, 2, 1), color = ColorSchemes.tab10[10])
+    lines!(ax_e_full, view(meantracks200, :, 1, 1), view(meantracks200, :, 2, 1), color = PAPER_COLORS.track)
 end
+
+write_source_matrix(figure_name, "ef_summed_frames_experiment", view(sumframes1_exp, :, :, 1);
+    x = ((0:W-1) .+ 0.5) .* exp_metadata["pixel size"], y = ((0:H-1) .+ 0.5) .* exp_metadata["pixel size"],
+    xlabel = "x_um", ylabel = "y_um")
 
 heatmap!(ax_e_zoom, (0:W) .* exp_metadata["pixel size"], (0:H) .* exp_metadata["pixel size"], view(sumframes1_exp, :, :, 1), colormap = :grays)
 
 batchsize_e_for_sigma = something(batchsize_e, 200)
 R  = pre_eq5(exp_metadata["period"] * batchsize_e_for_sigma, exp_metadata["period"] * batchsize_e_for_sigma)
-σ₀ = pre_eq14(psf.σ, brightness, exp_metadata["period"] * batchsize_e_for_sigma)
-σ  = pre_eq1(σ₀, 10, exp_metadata["period"] * batchsize_e_for_sigma, psf.σ)
+σ₀ = pre_eq14(psf_exp.σ, brightness_exp, exp_metadata["period"] * batchsize_e_for_sigma)
+σ  = pre_eq1(σ₀, D_exp, exp_metadata["period"] * batchsize_e_for_sigma, psf_exp.σ)
 
 if meantracks200 !== nothing
     for r in eachslice(meantracks200, dims = 1)
-        arc!(ax_e_zoom, Point2f(r[1], r[2]), σ, -π, π, color = ColorSchemes.tab20[8], alpha = 0.5)
+        arc!(ax_e_zoom, Point2f(r[1], r[2]), σ, -π, π, color = PAPER_COLORS.locerror, alpha = 0.5)
     end
-    lines!(ax_e_zoom, view(meantracks200, :, 1, 1), view(meantracks200, :, 2, 1), color = ColorSchemes.tab10[10])
+    lines!(ax_e_zoom, view(meantracks200, :, 1, 1), view(meantracks200, :, 2, 1), color = PAPER_COLORS.track)
+    write_source_csv(figure_name, "e_track_posterior_mean_bs$(batchsize_e_for_sigma)",
+        ["x_um", "y_um", "uncertainty_circle_radius_um"],
+        view(meantracks200, :, 1, 1), view(meantracks200, :, 2, 1),
+        fill(σ, size(meantracks200, 1)))
 end
 
 bounds_ef = (0.3, 0.6, 0.5, 0.8)
@@ -610,15 +675,18 @@ end
 
 heatmap!(ax_f_full, (0:W) .* exp_metadata["pixel size"], (0:H) .* exp_metadata["pixel size"], view(sumframes1_exp, :, :, 1), colormap = :grays)
 if meantracks1_exp !== nothing
-    lines!(ax_f_full, view(meantracks1_exp, :, 1, 1), view(meantracks1_exp, :, 2, 1), color = ColorSchemes.tab10[10])
+    lines!(ax_f_full, view(meantracks1_exp, :, 1, 1), view(meantracks1_exp, :, 2, 1), color = PAPER_COLORS.track)
+    write_source_csv(figure_name, "f_track_posterior_mean_bs1",
+        ["x_um", "y_um"],
+        view(meantracks1_exp, :, 1, 1), view(meantracks1_exp, :, 2, 1))
 end
 poly!(ax_f_full, p_ef, color = :gray70)
 
 heatmap!(ax_f_zoom, (0:W) .* exp_metadata["pixel size"], (0:H) .* exp_metadata["pixel size"], view(sumframes1_exp, :, :, 1), colormap = :grays)
 if meantracks1_exp !== nothing
     lines!(ax_f_zoom, view(meantracks1_exp, :, 1, 1), view(meantracks1_exp, :, 2, 1),
-            alpha = 0.5, color = ColorSchemes.tab20[8], linewidth = 16.0)
-    lines!(ax_f_zoom, view(meantracks1_exp, :, 1, 1), view(meantracks1_exp, :, 2, 1), color = ColorSchemes.tab10[10])
+            alpha = 0.5, color = PAPER_COLORS.locerror, linewidth = 16.0)
+    lines!(ax_f_zoom, view(meantracks1_exp, :, 1, 1), view(meantracks1_exp, :, 2, 1), color = PAPER_COLORS.track)
 end
 
 limits!(ax_f_zoom, bounds_ef...)
