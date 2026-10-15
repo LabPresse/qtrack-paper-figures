@@ -8,7 +8,7 @@ The source code for QTrack is available on Github at <https://github.com/LabPres
 
 These materials are distributed in two places:
 
-- **Zenodo** (<https://doi.org/10.5281/zenodo.20656382>): the complete archive, including all precomputed simulation and inference results. Download this if you want to regenerate the figures directly from the precomputed results without rerunning simulations or inference.
+- **Zenodo** (<https://doi.org/10.5281/zenodo.20656381>): the complete archive, including all precomputed simulation and inference results. This DOI always resolves to the latest version of the archive. Download this if you want to regenerate the figures directly from the precomputed results without rerunning simulations or inference.
 - **GitHub** (<https://github.com/LabPresse/qtrack-paper-figures>): the code, parameter files, experimental data, and most precomputed simulations. The precomputed inference results (and the precomputed simulation for Fig. S3) are too large for GitHub and are only included in the Zenodo archive. From a GitHub clone you can still regenerate everything from scratch by running the simulation and inference scripts yourself.
 
 ## Overview
