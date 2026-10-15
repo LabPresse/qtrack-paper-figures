@@ -63,7 +63,7 @@ function make_fig()
     ############################## SETUP AND LOAD DATA ##############################
     chain = load(joinpath(INF_DIR, "chain_15.jld2"), "chain")
     track = chain.samples[end].tracks
-    frames = load(joinpath(SCRIPT_DIR, "frames.jld2"), "frames")
+    frames = load(joinpath(SCRIPT_DIR, "experimental_data", "frames.jld2"), "frames")
 
     # spots_by_frame = xml2spots(joinpath(SCRIPT_DIR, "frames15_median.xml"))
     # median_frames, metadata = readtiff(joinpath(SCRIPT_DIR, "frames15_median.tif"))

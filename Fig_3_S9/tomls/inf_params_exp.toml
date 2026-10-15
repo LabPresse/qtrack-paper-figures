@@ -1,7 +1,7 @@
 # Inference Parameters
 
 # Data directory (relative path to toml file location, or absolute path)
-frames_path = "./frames.jld2"
+frames_path = "../experimental_data/frames.jld2"
 camera_params_path = "./exp_camera_params.toml"
 
 # Inference parameters
@@ -21,10 +21,10 @@ brightness_guess = 6.4e3
 brightness_proposal = [10, 1]               # proposal params for brightness
 track_prior_scale = 10                      # pixel_size * this for track position prior
 track_logonprob = -10
-tracks_guess_path = "./guess.jld2" # path to .jld2 file with initial track guesses
+tracks_guess_path = "../experimental_data/guess.jld2" # path to .jld2 file with initial track guesses
 
 [saving]
-chain_output_dir = "./inference_results/"
+chain_output_dir = "../inference_results/"
 save_name = "beads"
 also_save = [] # list additional files from sim dir (data_dir + simulation_i) to save in chain_output_dir, in addition to the chain files
 save_unique = false # if true, will save results in folder "$(date)_inf_$(save_name)$(id)" with a unique

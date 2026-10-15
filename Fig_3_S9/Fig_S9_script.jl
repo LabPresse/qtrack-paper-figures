@@ -4,7 +4,7 @@ using SP2T
 using Statistics
 using SP2TExtra
 using ColorSchemes
-# include(joinpath(@__DIR__, "..", "utils.jl"))
+include(joinpath(@__DIR__, "..", "utils.jl"))
 
 if length(ARGS) >= 1
     if ARGS[1] == "precomputed"
@@ -25,7 +25,7 @@ const SAVE_DIR = joinpath(SCRIPT_DIR, "..", "figures")
 
 function make_fig()
     chain = load(joinpath(INF_DIR, "chain_15.jld2"), "chain")
-    all_tracks = xml2tracks(joinpath(SCRIPT_DIR, "frames15_median_Tracks.xml"), batchsize=1, nframes=750)[:, 1:2, :]
+    all_tracks = xml2tracks(joinpath(SCRIPT_DIR, "experimental_data", "frames15_median_Tracks.xml"), batchsize=1, nframes=750)[:, 1:2, :]
     all_tracks[:,  [1,2], :] = all_tracks[:, [2,1], :]
     println("(nframes, dims, n_tracks) ", size(all_tracks))
 
@@ -114,6 +114,7 @@ function make_fig()
     y_shift_trackmate = [0.05, 0.05, 0.05]
     sum_r2 = [0.0, 0.0, 0.0]
     n_valid = [0.0, 0.0, 0.0]
+    tm_segments = [Tuple{Vector{Float64},Vector{Float64}}[] for _ in 1:3] # plotted (aligned) TrackMate segments per particle
     for ti in 1: size(all_tracks, 3)
         x_traj = all_tracks[:, 1, ti] 
         y_traj = all_tracks[:, 2, ti] 
@@ -142,6 +143,8 @@ function make_fig()
         sum_r2[particle_idx] += sum(dx.^2 .+ dy.^2)
         n_valid[particle_idx] += length(dx)
 
+        push!(tm_segments[particle_idx], (Float64.(x_traj), Float64.(y_traj)))
+
         ## Plotting
         lines!(ax_x[particle_idx], t, x_traj, alpha=0.6)
         lines!(ax_y[particle_idx], t, y_traj, alpha=0.6)
@@ -151,10 +154,35 @@ function make_fig()
         lines!(ax_y[particle_idx], t, chain.samples[end].tracks[:,2, particle_idx], color=:black)
 
     end
+    radial_rms = [sqrt(sum_r2[i] / n_valid[i]) * sqrt(2) for i in 1:3]
     for i in 1:3
-        radial_rms = sqrt(sum_r2[i] / n_valid[i]) * sqrt(2)
-        println("Radial RMS error: $radial_rms μm")
+        println("Radial RMS error: $(radial_rms[i]) μm")
     end
+
+    # Source data: confidence maps, aligned TrackMate segments, and RMS errors.
+    # Positions are relative to each particle's mean QTrack position (as plotted);
+    # the heatmaps display log10 of the confidence values dumped here.
+    edge_centers = collect((edges[1:end-1] .+ edges[2:end]) ./ 2)
+    panel_letters = [("a", "b"), ("c", "d"), ("e", "f")]
+    for p in 1:3
+        lx, ly = panel_letters[p]
+        write_source_matrix("Fig_S9", "$(lx)_confidence_x_particle$(p)", crediblex[p];
+            x = collect(t), y = edge_centers, xlabel = "time_s", ylabel = "x_position_um")
+        write_source_matrix("Fig_S9", "$(ly)_confidence_y_particle$(p)", credibley[p];
+            x = collect(t), y = edge_centers, xlabel = "time_s", ylabel = "y_position_um")
+
+        seg_col = Int[]; t_col = Float64[]; x_col = Float64[]; y_col = Float64[]
+        for (si, (sx, sy)) in enumerate(tm_segments[p])
+            append!(seg_col, fill(si, length(t)))
+            append!(t_col, collect(t))
+            append!(x_col, sx)
+            append!(y_col, sy)
+        end
+        write_source_csv("Fig_S9", "$(lx)$(ly)_trackmate_segments_particle$(p)",
+            ["segment", "time_s", "x_um", "y_um"], seg_col, t_col, x_col, y_col)
+    end
+    write_source_csv("Fig_S9", "af_trackmate_radial_rms",
+        ["particle", "radial_rms_um"], 1:3, radial_rms)
 
     Colorbar(fig[1:3, 3], hm, vertical=true, ticks=(-3:-1, ["10⁻³", "10⁻²", "10⁻¹"]), ticksize=2, label="Confidence", width=10)
 
