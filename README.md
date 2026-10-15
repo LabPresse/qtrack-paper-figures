@@ -59,7 +59,7 @@ In addition to saving the figure PDFs, each figure script writes the numerical v
 python3 make_source_data.py
 ```
 
-(requires Python with the `openpyxl` package) assembles these CSVs into `Source_Data.xlsx` — the Source Data file accompanying the manuscript, with one sheet per figure and a README sheet describing the conventions. The figure scripts only write the CSVs; the workbook is produced exclusively by `make_source_data.py`, so rerunning figure scripts never overwrites it.
+(requires Python with the `openpyxl` package) assembles these CSVs into `Source_Data.xlsx` — the Source Data file accompanying the manuscript, with one sheet per figure and a README sheet describing the conventions. The figure scripts only write the CSVs; the workbook is produced exclusively by `make_source_data.py`, so rerunning figure scripts never overwrites it. A prebuilt copy of `Source_Data.xlsx` is included in the Zenodo archive.
 
 ## Figure guide
 
