@@ -150,9 +150,6 @@ function make_fig()
         lines!(ax_y[particle_idx], t, y_traj, alpha=0.6)
         # lines!(ax_x[particle_idx], t, x_mean, color=:red, linestyle=:dash, alpha=0.6)
         # lines!(ax_y[particle_idx], t, y_mean, color=:red, linestyle=:dash, alpha=0.6)
-        lines!(ax_x[particle_idx], t, chain.samples[end].tracks[:,1, particle_idx], color=:black)
-        lines!(ax_y[particle_idx], t, chain.samples[end].tracks[:,2, particle_idx], color=:black)
-
     end
     radial_rms = [sqrt(sum_r2[i] / n_valid[i]) * sqrt(2) for i in 1:3]
     for i in 1:3

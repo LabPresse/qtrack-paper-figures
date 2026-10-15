@@ -73,6 +73,10 @@ FIGURES = [
     ("Fig_S8", "Supplementary Figure 8",
      "Experimental diffusion-coefficient posterior histograms for batch sizes 1 and 2 "
      "(binned probability densities)."),
+    ("Fig_S9", "Supplementary Figure 9",
+     "TrackMate bead trajectories (aligned segments) overlaid on QTrack posterior confidence "
+     "maps for each particle and axis, with TrackMate radial RMS errors. Positions are "
+     "relative to each particle's mean QTrack position."),
 ]
 
 README_NOTES = [
