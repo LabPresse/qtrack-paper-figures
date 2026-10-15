@@ -1,8 +1,8 @@
 # Data and source code for figure generation in the QTrack manuscript
 
-This repository contains the data, analysis scripts, and figure-generation code associated with the QTrack manuscript. It is intended to provide a clean, reproducible, and accessible set of materials for regenerating the figures presented in the paper.
+This repository contains the data, analysis scripts, and figure-generation code associated with the manuscript "Particle Tracking for Quantized Intensities Accelerated with Parallelism" (QTrack). It is intended to provide a clean, reproducible, and accessible set of materials for regenerating the figures presented in the paper.
 
-The source code for QTrack is available on Github at <https://github.com/LabPresse/SP2T.jl>, and on Zenodo at <10.5281/zenodo.20656382>.
+The source code for QTrack is available on Github at <https://github.com/LabPresse/SP2T.jl>.
 
 ## Where to get the materials
 
